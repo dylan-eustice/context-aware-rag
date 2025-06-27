@@ -19,7 +19,7 @@ include:
 
 services:
   vss-ctx-rag-retriever:
-    image: vss_ctx_rag-${USER}
+    image: ctx_rag
     container_name: vss-ctx-rag-retriever
     ports:
       - ${VSS_CTX_PORT_RET:-8000}:8000
@@ -37,7 +37,7 @@ services:
       - VIA_CTX_RAG_OTEL_ENDPOINT=http://otel_collector:4318
 
   vss-ctx-rag-data-ingestion:
-    image: vss_ctx_rag-${USER}
+    image: ctx_rag
     container_name: vss-ctx-rag-data-ingestion
     ports:
       - ${VSS_CTX_PORT_IN:-8001}:8000
@@ -57,4 +57,4 @@ services:
 
 networks:
   default:
-    name: vss-ctx-rag-${USER}
+    name: ctx-rag

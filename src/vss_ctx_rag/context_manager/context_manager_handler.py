@@ -371,6 +371,9 @@ class ContextManagerHandler:
                         )
                         self.rag_type = "graph-rag"
                     elif chat_config["rag"] == "vector-rag":
+                        logger.info(f"Setting up vector-rag with chat_config keys: {list(chat_config.keys())}")
+                        logger.info(f"Full chat_config for vector-rag: {chat_config}")
+
                         self.add_function(
                             ChatFunction("chat")
                             .add_function(

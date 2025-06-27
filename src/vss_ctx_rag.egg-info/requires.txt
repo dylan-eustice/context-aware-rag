@@ -1,4 +1,4 @@
-openai<2.0.0,>=1.40.6
+openai<2.0.0,>=1.68.2
 langchain_core==0.3.21
 langchain==0.3.3
 langchain_community==0.3.2
@@ -7,13 +7,12 @@ langchain-openai==0.2.2
 langchain-experimental==0.3.2
 langchain-nvidia-ai-endpoints==0.3.7
 pymilvus==2.4.4
-sentence-transformers<3.0.0,>=2.7.0
+pydantic==2.10.6
 uvicorn<0.31.0,>=0.30.5
 fastapi<0.116.0,>=0.115.4
 requests<2.33.0,>=2.32.3
 jsonschema<4.23.0,>=4.22.0
 schema<0.8.0,>=0.7.7
-langchain-huggingface==0.1.0
 neo4j==5.24
 json-repair==0.30.2
 opentelemetry-sdk>=1.28.2
@@ -22,3 +21,15 @@ opentelemetry-exporter-otlp-proto-http>=1.28.2
 opentelemetry-instrumentation-fastapi>=0.49b2
 nvtx==0.2.10
 matplotlib==3.10.0
+
+[docs]
+ipython~=8.31
+myst-parser~=4.0
+nbsphinx~=0.9
+nvidia-sphinx-theme>=0.0.7
+sphinx~=8.2
+sphinx-copybutton>=0.5
+sphinx-autoapi>=3.6
+vale==3.9.5
+setuptools-scm>=8.1.0
+sphinxcontrib-mermaid>=1.0.0

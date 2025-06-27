@@ -1,9 +1,11 @@
 Metadata-Version: 2.4
 Name: vss_ctx_rag
-Version: 0.2.22rc3
+Version: 0.5.0
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
-Requires-Dist: openai<2.0.0,>=1.40.6
+License-File: LICENSE
+License-File: LICENSE.3rdparty
+Requires-Dist: openai<2.0.0,>=1.68.2
 Requires-Dist: langchain_core==0.3.21
 Requires-Dist: langchain==0.3.3
 Requires-Dist: langchain_community==0.3.2
@@ -12,13 +14,12 @@ Requires-Dist: langchain-openai==0.2.2
 Requires-Dist: langchain-experimental==0.3.2
 Requires-Dist: langchain-nvidia-ai-endpoints==0.3.7
 Requires-Dist: pymilvus==2.4.4
-Requires-Dist: sentence-transformers<3.0.0,>=2.7.0
+Requires-Dist: pydantic==2.10.6
 Requires-Dist: uvicorn<0.31.0,>=0.30.5
 Requires-Dist: fastapi<0.116.0,>=0.115.4
 Requires-Dist: requests<2.33.0,>=2.32.3
 Requires-Dist: jsonschema<4.23.0,>=4.22.0
 Requires-Dist: schema<0.8.0,>=0.7.7
-Requires-Dist: langchain-huggingface==0.1.0
 Requires-Dist: neo4j==5.24
 Requires-Dist: json-repair==0.30.2
 Requires-Dist: opentelemetry-sdk>=1.28.2
@@ -27,6 +28,18 @@ Requires-Dist: opentelemetry-exporter-otlp-proto-http>=1.28.2
 Requires-Dist: opentelemetry-instrumentation-fastapi>=0.49b2
 Requires-Dist: nvtx==0.2.10
 Requires-Dist: matplotlib==3.10.0
+Provides-Extra: docs
+Requires-Dist: ipython~=8.31; extra == "docs"
+Requires-Dist: myst-parser~=4.0; extra == "docs"
+Requires-Dist: nbsphinx~=0.9; extra == "docs"
+Requires-Dist: nvidia-sphinx-theme>=0.0.7; extra == "docs"
+Requires-Dist: sphinx~=8.2; extra == "docs"
+Requires-Dist: sphinx-copybutton>=0.5; extra == "docs"
+Requires-Dist: sphinx-autoapi>=3.6; extra == "docs"
+Requires-Dist: vale==3.9.5; extra == "docs"
+Requires-Dist: setuptools-scm>=8.1.0; extra == "docs"
+Requires-Dist: sphinxcontrib-mermaid>=1.0.0; extra == "docs"
+Dynamic: license-file
 
 <!--
 Copyright (c) 2025, NVIDIA CORPORATION. All rights reserved.
@@ -39,36 +52,37 @@ license agreement from NVIDIA Corporation is strictly prohibited.
 -->
 
 
-# NVIDIA Context RAG (C-RAG)
+# NVIDIA Context Aware RAG
 
-C-RAG  is a flexible library designed to seamlessly integrate into existing data processing workflows to build customized RAG pipelines.
+![image](docs/source/_static/data_architecture.png)
+
+Context Aware RAG is a flexible library designed to seamlessly integrate into existing data processing workflows to build customized data ingestion and retrieval (RAG) pipelines.
 
 ## Key Features
 
-- [**Data Ingestion Service:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/content/features.html#data-ingestion-and-services) Add data to the RAG pipeline from a variety of sources.
-- [**Data Retrieval Service:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/content/features.html#retrieval-strategies) Retrieve data from the RAG pipeline using natural language queries.
-- [**Function and Tool Components:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/content/architecture.html#components) Easy to create custom functions and tools to support your existing workflows.
-- [**Swappable Databases:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/content/architecture.html) Use a variety of databases to store and retrieve data.
-- [**GraphRAG Support:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/content/features.html) Seamlessly extract knowledge graphs from data to support your existing workflows.
-- [**Observability:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/content/features.html#otel-and-metrics) Monitor and troubleshoot your workflows with any OpenTelemetry-compatible monitoring tool.
+- [**Data Ingestion Service:**](https://nvidia.github.io/context-aware-rag/overview/features.html#ingestion-strategies) Add data to the RAG pipeline from a variety of sources.
+- [**Data Retrieval Service:**](https://nvidia.github.io/context-aware-rag/overview/features.html#retrieval-strategies) Retrieve data from the RAG pipeline using natural language queries.
+- [**Function and Tool Components:**](https://nvidia.github.io/context-aware-rag/overview/architecture.html#components) Easy to create custom functions and tools to support your existing workflows.
+- [**GraphRAG:**](https://nvidia.github.io/context-aware-rag/overview/features.html#retrieval-strategies) Seamlessly extract knowledge graphs from data to support your existing workflows.
+- [**Observability:**](https://nvidia.github.io/context-aware-rag/metrics.html) Monitor and troubleshoot your workflows with any OpenTelemetry-compatible monitoring tool.
 
 
-With C-RAG, you can quickly build RAG pipelines to support your existing workflows.
+With Context Aware RAG, you can quickly build RAG pipelines to support your existing workflows.
 
 ## Links
 
- * [Documentation](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/index.html): Explore the full documentation for C-RAG.
- * [C-RAG Architecture](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/content/architecture.html): Learn more about how C-RAG works and its components.
- * [Getting Started Guide](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/content/usage/index.html): Set up your environment and start integrating C-RAG into your workflows.
- * [Examples](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/content/usage/usage.html): Explore examples of C-RAG workflows.
- * [Troubleshooting](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/content/troubleshooting.html): Get help with common issues.
-
+ * [Documentation](https://nvidia.github.io/context-aware-rag): Explore the full documentation for Context Aware RAG.
+ * [Context Aware RAG Architecture](https://nvidia.github.io/context-aware-rag/overview/architecture.html): Learn more about how Context Aware RAG works and its components.
+ * [Getting Started Guide](https://nvidia.github.io/context-aware-rag/guides/index.html): Set up your environment and start integrating Context Aware RAG into your workflows.
+ * [Examples](https://nvidia.github.io/context-aware-rag/guides/library.html#document-ingestion): Explore examples of Context Aware RAG workflows.
+ * [Troubleshooting](https://nvidia.github.io/context-aware-rag/troubleshooting.html): Get help with common issues.
+ * [Release Notes](https://nvidia.github.io/context-aware-rag/release-notes.html): Learn about the latest features and improvements.
 
 ## Getting Started
 
 ### Prerequisites
 
-Before you begin using C-RAG, ensure that you have the following software installed.
+Before you begin using Context Aware RAG, ensure that you have the following software installed.
 
 - Install [Git](https://git-scm.com/)
 - Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
@@ -76,33 +90,32 @@ Before you begin using C-RAG, ensure that you have the following software instal
 
 ### Installation
 
-#### Installing from artifactory
-
-
-The wheel file is available on artifactory.
+#### Clone the repository
 
 ```bash
-pip install vss_ctx_rag==0.2.21 --index-url https://urm.nvidia.com/artifactory/api/pypi/nv-shared-pypi/simple
+git clone git@github.com:NVIDIA/context-aware-rag.git
+cd context-aware-rag/
 ```
 
-#### Installing from source
-
-
-##### Create a virtual environment using uv
+#### Create a virtual environment using uv
 
 ```bash
 uv venv --seed .venv
 source .venv/bin/activate
 ```
 
-##### Clone the repository and install the dependencies
+#### Installing from source
 
 ```bash
-git clone https://gitlab-master.nvidia.com/via/via-ctx-rag.git
-cd via-ctx-rag
 uv pip install -e .
 ```
 
+#### Optional: Building and Installing the wheel file
+
+```bash
+uv build
+uv pip install vss_ctx_rag-0.5.0-py3-none-any.whl
+```
 
 ## Service Example
 
@@ -123,6 +136,12 @@ Create a .env file in the root directory and set the following variables:
    VSS_CTX_PORT_IN=<DATA INGESTION PORT>
 ```
 
+### Build docker
+
+```bash
+make -C docker build
+```
+
 ### Using docker compose
 
 ```bash
@@ -132,11 +151,11 @@ make -C docker start_compose
 This will start the following services:
 
 
-* vss-ctx-rag-data-ingestion
+* ctx-rag-data-ingestion
 
   * Service available at `http://<HOST>:<VSS_CTX_PORT_IN>`
 
-* vss-ctx-rag-data-retrieval
+* ctx-rag-data-retrieval
 
   * Service available at `http://<HOST>:<VSS_CTX_PORT_RET>`
 
@@ -146,9 +165,8 @@ This will start the following services:
 
 * milvus
 
-  * UI available at `http://<HOST>:9091`
-
 * otel-collector
+
 * jaeger
 
   * UI available at `http://<HOST>:16686`
@@ -159,7 +177,7 @@ This will start the following services:
 
 * cassandra
 
-To change the storage volumes, export DOCKER_VOLUME_DIRECTORY to the desired directory.
+To change the storage volumes, export `DOCKER_VOLUME_DIRECTORY` to the desired directory.
 
 ### Data Ingestion Example
 
@@ -172,7 +190,12 @@ base_url = "http://<HOST>:<VSS_CTX_PORT_IN>"
 headers = {"Content-Type": "application/json"}
 
 ### Initialize the service with a unique uuid
-init_data = {"config_path": "/app/service/config.yaml", "uuid": "1"}
+init_data = {"uuid": "1"}
+### Optional: Initialize the service with a config file or context config
+"""
+init_data = {"config_path": "/app/config/config.yaml", "uuid": "1"}
+init_data = {"context_config": yaml.safe_load(open("/app/config/config.yaml")), "uuid": "1"}
+"""
 response = requests.post(
     f"{base_url}/init", headers=headers, data=json.dumps(init_data)
 )
@@ -215,7 +238,7 @@ base_url = "http://<HOST>:<VSS_CTX_PORT_RET>"
 headers = {"Content-Type": "application/json"}
 
 ### Initialize the service with the same uuid as the data ingestion service
-init_data = {"config_path": "/app/service/config.yaml", "uuid": "1"}
+init_data = {"config_path": "/app/config/config.yaml", "uuid": "1"}
 response = requests.post(
     f"{base_url}/init", headers=headers, data=json.dumps(init_data)
 )
@@ -231,3 +254,14 @@ response = requests.post(
 print(response.json()["result"])
 
 ```
+
+## Acknowledgements
+
+We would like to thank the following projects that made Context Aware RAG possible:
+
+- [FastAPI](https://github.com/tiangolo/fastapi)
+- [LangChain](https://github.com/langchain-ai/langchain)
+- [Neo4j](https://github.com/neo4j/neo4j)
+- [Milvus](https://github.com/milvus-io/milvus)
+- [uv](https://github.com/astral-sh/uv)
+- [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-python)

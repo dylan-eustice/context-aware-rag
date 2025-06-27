@@ -64,7 +64,7 @@ services:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: otel_collector
     volumes:
-      - ${OTEL_COLLOR_CONFIG:-${PWD}/docker/configs/otel-collector-config.yml}:/etc/otelcol/otel-collector-config.yml
+      - ${OTEL_COLLOR_CONFIG:-../configs/otel-collector-config.yml}:/etc/otelcol/otel-collector-config.yml
     command: --config /etc/otelcol/otel-collector-config.yml
     ports:
       - "4318:4318"
@@ -81,7 +81,7 @@ services:
     user: ":"
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/volumes_prometheus:/prometheus
-      - ${PROMETHEUS_CONFIG:-${PWD}/docker/configs/prometheus.yml}:/etc/prometheus/prometheus.yml
+      - ${PROMETHEUS_CONFIG:-../configs/prometheus.yml}:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
 
@@ -94,7 +94,7 @@ services:
       - TERM=linux
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-polystat-panel
     ports:
-      - '3000:3000'
+      - '3001:3000'
     volumes:
       - '${DOCKER_VOLUME_DIRECTORY:-.}/volumes/volumes_grafana:/var/lib/grafana'
     healthcheck:

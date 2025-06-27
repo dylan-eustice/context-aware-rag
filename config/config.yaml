@@ -14,7 +14,7 @@
 # limitations under the License.
 ---
 summarization:
-  enable: true
+  enable: false
   method: "batch"
   llm:
     model: meta/llama-3.1-70b-instruct
@@ -35,6 +35,13 @@ summarization:
 
 chat:
   rag: vector-rag # graph-rag or vector-rag
+  citations:
+    enabled: true
+    include_metadata: true
+    citation_fields: ["doc_id", "timestamp"]
+    citation_template: "[{doc_id}] ({timestamp})"
+    show_snippets: true
+    snippet_length: 200
   params:
     batch_size: 1
   llm:
@@ -50,7 +57,7 @@ chat:
     base_url: https://ai.api.nvidia.com/v1/retrieval/nvidia/llama-3_2-nv-rerankqa-1b-v2/reranking
 
 notification:
-  enable: true
+  enable: false
   endpoint: "http://127.0.0.1:60000/via-alert-callback"
   llm:
     model: meta/llama-3.1-70b-instruct

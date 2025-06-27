@@ -55,10 +55,10 @@ async def vss_ctx_rag_retrieval(config, builder: Builder):
     ctx_mgr = ContextManager(config=vss_ctx_rag_config, req_info=req_info)
     time.sleep(5)
 
-    async def _call_wrapper(text: str) -> str:
+    async def _call_wrapper(input_message: str) -> str:
         state = {
             "chat": {
-                "question": text,
+                "question": input_message,
                 "is_live": False,
                 "is_last": False,
             }

@@ -60,8 +60,16 @@ class LogFormatter(logging.Formatter):
         color = LOG_COLORS.get(record.levelname, LOG_COLORS["RESET"])
         return f"{self.formatTime(record)} {color}{record.levelname}{LOG_COLORS['RESET']} {record.getMessage()}"
 
+# Create the log directory if it doesn't exist
+log_dir = "/tmp/via-logs"
+if not os.path.exists(log_dir):
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+        logger.info(f"Created log directory: {log_dir}")
+    except Exception as e:
+        print(f"Error creating log directory {log_dir}: {e}")
 
-file_logger = logging.FileHandler("/tmp/via-logs/vss_ctx_rag.log")
+file_logger = logging.FileHandler(f"{log_dir}/vss_ctx_rag.log")
 file_logger.setLevel(LOG_PERF_LEVEL)
 file_logger.setFormatter(LogFormatter("%(asctime)s %(levelname)s %(message)s"))
 

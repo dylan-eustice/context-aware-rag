@@ -113,6 +113,15 @@ def aiq_to_vss_config(
                 "model": config.rerank_model_name,
                 "base_url": config.rerank_model_url,
             },
+            # Map citations configuration from AgentIQ to vss_ctx_rag format
+            "citations": {
+                "enabled": config.citations_enabled,
+                "include_metadata": config.citations_include_metadata,
+                "citation_fields": config.citations_fields,
+                "citation_template": config.citations_template,
+                "show_snippets": config.citations_show_snippets,
+                "snippet_length": config.citations_snippet_length,
+            },
         },
         "milvus_db_host": config.vector_db_host,
         "milvus_db_port": config.vector_db_port,
@@ -138,6 +147,14 @@ def create_vss_ctx_rag_config(name: str):
         chat_batch_size: int = 1
         summ_batch_size: int = 5
         summ_batch_max_concurrency: int = 20
+
+        # Citations configuration fields
+        citations_enabled: Optional[bool] = False
+        citations_include_metadata: Optional[bool] = True
+        citations_fields: Optional[list] = ["doc_id", "filename"]
+        citations_template: Optional[str] = "[{doc_id}] {filename}"
+        citations_show_snippets: Optional[bool] = False
+        citations_snippet_length: Optional[int] = 200
 
         summarize: Optional[bool] = True
         enable_chat: Optional[bool] = True

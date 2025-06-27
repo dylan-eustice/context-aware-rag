@@ -1,7 +1,8 @@
+LICENSE
+LICENSE.3rdparty
 README.md
 pyproject.toml
 src/vss_ctx_rag/__init__.py
-src/vss_ctx_rag/py.typed
 src/vss_ctx_rag.egg-info/PKG-INFO
 src/vss_ctx_rag.egg-info/SOURCES.txt
 src/vss_ctx_rag.egg-info/dependency_links.txt
@@ -22,12 +23,9 @@ src/vss_ctx_rag/context_manager/__init__.py
 src/vss_ctx_rag/context_manager/context_manager.py
 src/vss_ctx_rag/context_manager/context_manager_handler.py
 src/vss_ctx_rag/context_manager/context_manager_models.py
-src/vss_ctx_rag/data/config_schema.json
 src/vss_ctx_rag/functions/notification/__init__.py
 src/vss_ctx_rag/functions/notification/notifier.py
 src/vss_ctx_rag/functions/rag/chat_function.py
-src/vss_ctx_rag/functions/rag/adv_graph_rag/adv_graph_rag_func.py
-src/vss_ctx_rag/functions/rag/adv_graph_rag/adv_graph_retrieval.py
 src/vss_ctx_rag/functions/rag/graph_rag/__init__.py
 src/vss_ctx_rag/functions/rag/graph_rag/constants.py
 src/vss_ctx_rag/functions/rag/graph_rag/graph_extraction.py
@@ -38,8 +36,6 @@ src/vss_ctx_rag/functions/rag/vector_rag/__init__.py
 src/vss_ctx_rag/functions/rag/vector_rag/vector_retrieval_func.py
 src/vss_ctx_rag/functions/summarization/__init__.py
 src/vss_ctx_rag/functions/summarization/batch.py
-src/vss_ctx_rag/functions/summarization/offline_batch.py
-src/vss_ctx_rag/functions/summarization/refine.py
 src/vss_ctx_rag/tools/health/rag_health.py
 src/vss_ctx_rag/tools/llm/__init__.py
 src/vss_ctx_rag/tools/llm/llm_handler.py
@@ -56,4 +52,3 @@ src/vss_ctx_rag/utils/ctx_rag_logger.py
 src/vss_ctx_rag/utils/globals.py
 src/vss_ctx_rag/utils/otel.py
 src/vss_ctx_rag/utils/utils.py
-tests/test_adv_graph_rag.py

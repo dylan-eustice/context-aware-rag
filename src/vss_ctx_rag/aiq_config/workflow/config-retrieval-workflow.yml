@@ -52,4 +52,12 @@ workflow:
   summ_batch_size: 5
   summ_batch_max_concurrency: 20
 
+  # Citations configuration
+  citations_enabled: true
+  citations_include_metadata: true
+  citations_fields: ["doc_id", "filename", "timestamp"]
+  citations_template: "[{doc_id}] {filename} ({timestamp})"
+  citations_show_snippets: true
+  citations_snippet_length: 200
+
   uuid: "123456"
