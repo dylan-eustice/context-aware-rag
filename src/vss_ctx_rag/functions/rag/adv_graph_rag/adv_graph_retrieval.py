@@ -318,7 +318,7 @@ class AdvGraphRetrieval:
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse JSON response: {e}")
                     retry_count += 1
-                    if retry_count < self.max_r:
+                    if retry_count < self.max_retries:
                         # Retry getting analysis
                         analysis_response = await self.analyze_question(question)
                         json_start = analysis_response.find("{")
