@@ -253,8 +253,9 @@ class AdvGraphRAGFunc(Function):
                         additional_docs = (
                             await self.retriever.retrieve_relevant_context(info_need)
                         )
-                        new_context.extend(additional_docs)
-                        logger.info(f"Retrieved additional context for: {info_need}")
+                        if additional_docs is not None:
+                            new_context.extend(additional_docs)
+                            logger.info(f"Retrieved additional context for: {info_need}")
 
                     # Add new context and continue
                     context.extend(new_context)
