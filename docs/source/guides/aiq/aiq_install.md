@@ -15,9 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Installation
-
-## Installing Context Aware RAG AIQ Plugin
+# Installing vss_ctx_rag AIQ Plugin
 
 ## AIQ Library Setup
 
@@ -42,18 +40,17 @@ Complete the following steps to setup the environment
     uv venv --seed .venv
     source .venv/bin/activate
     uv sync
-    uv pip install -e '.[langchain]'
     ```
 
 If you are having issues with the above steps, reference the [AgentIQ Documentation](https://docs.nvidia.com/agentiq/latest/index.html)
 
-## Install the Context Aware RAG library
+## Install the vss_ctx_rag library
 
 ### Install from source
 
-Clone the Context Aware RAG library from [here](https://github.com/NVIDIA/context-aware-rag.git)
+Clone the vss_ctx_rag library from [here]()
 
-Install the Context Aware RAG library
+Install the vss_ctx_rag library
 
 ``` bash
 uv pip install -e .

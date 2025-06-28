@@ -25,7 +25,7 @@ Both services must be initialized before use with the same UUID to ensure proper
 
 ### Config File
 
-Both services need a config file to initialize. Refer to the [Configuration](../../intro/quick_start.md#setting-up-config-file) guide for more information on the config file.
+Both services need a config file to initialize. Refer to the [Configuration](../../intro/setup.md) guide for more information on the config file.
 
 ### Initialize Data Ingestion Service
 

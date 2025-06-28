@@ -15,11 +15,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Architecture
+# Architecture Patterns
 
 ![image](../_static/data_architecture.png)
 
--   Context Aware RAG allows the user to start both a Data Ingestion Service
+-   vss_ctx_rag allows the user to start both a Data Ingestion Service
     and a Data Retrieval Service
     -   The Data Ingestion Service is responsible for ingesting data
         into the database
@@ -131,41 +131,18 @@ The system is built upon a clear separation between the logic
             -   Handles embedding-based similarity search
             -   Manages document ranking and selection
 
-## Service Architecture
+### Design Patterns
 
-The Context-Aware RAG system consists of two main services:
+-   Async/await for concurrent operations
+    -   Prevents context manager from blocking the main process
+    -   Utilizes asynchronous processing to handle requests
+-   Interface-based design (Tool, Function)
+    -   Allows for easy extension and modification of components
+    -   Allows for easy integration of new tools and functions
 
-1. **Data Ingestion Service** (default port: 8001) - Handles document ingestion and processing
-2. **Retrieval Service** (default port: 8000) - Handles question answering and document retrieval
+### Implementation Patterns
 
-```{mermaid}
-:config: {"theme": "dark"}
-:zoom:
-
-graph LR
-    A[Client] --> B[Data Ingestion Service]
-    A --> C[Retrieval Service]
-    B --> D[Vector Store/Graph DB]
-    C --> D
-```
-
-### Service Communication
-
-- Both services must be initialized with the same UUID to ensure proper communication
-- Services communicate through a shared database (vector store or graph DB)
-- Each service has its own dedicated port for client communication
-- Services can be scaled independently based on workload
-
-### Service Responsibilities
-
-1. **Data Ingestion Service**
-   - Handles document ingestion and processing
-   - Manages document chunking and embedding generation
-   - Stores processed documents in the database
-   - Provides health check endpoints
-
-2. **Retrieval Service**
-   - Handles user queries and question answering
-   - Retrieves relevant documents from the database
-   - Generates responses using LLM
-   - Provides health check endpoints
+-   Factory pattern for component creation
+-   Strategy pattern for different RAG approaches
+-   Observer pattern for event handling
+-   Repository pattern for data access

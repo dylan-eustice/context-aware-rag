@@ -16,36 +16,40 @@ limitations under the License.
 -->
 
 
-# Context Aware RAG
+# NVIDIA VSS Context RAG (vss-ctx-rag)
 
-![image](./_static/data_architecture.png)
-
-Context Aware RAG is a flexible library designed to seamlessly integrate into existing data processing workflows to build customized RAG pipelines.
+vss-ctx-rag is a flexible library designed to seamlessly integrate into existing data processing workflows to build customized RAG pipelines.
 
 ## Key Features
 
 - [**Data Ingestion Service:**](./overview/features.md#ingestion-strategies) Add data to the RAG pipeline from a variety of sources.
 - [**Data Retrieval Service:**](./overview/features.md#retrieval-strategies) Retrieve data from the RAG pipeline using natural language queries.
 - [**Function and Tool Components:**](./overview/architecture.md#components) Easy to create custom functions and tools to support your existing workflows.
-- [**GraphRAG:**](./overview/features.md#retrieval-strategies) Seamlessly extract knowledge graphs from data to support your existing workflows.
-- [**Observability:**](./metrics.md) Monitor and troubleshoot your workflows with any OpenTelemetry-compatible monitoring tool.
+- [**Swappable Databases:**](./overview/architecture.md#) Use a variety of databases to store and retrieve data.
+- [**GraphRAG Support:**](./overview/architecture.md#) Seamlessly extract knowledge graphs from data to support your existing workflows.
+- [**Observability:**](./overview/features.md#otel-and-metrics) Monitor and troubleshoot your workflows with any OpenTelemetry-compatible monitoring tool.
 
 
-With Context Aware RAG, you can quickly build RAG pipelines to support your existing workflows.
+With vss-ctx-rag, you can quickly build RAG pipelines to support your existing workflows.
+
+## Links
+
+ * [Documentation](./index.md): Explore the full documentation for vss-ctx-rag.
+ * [vss-ctx-rag Architecture](./overview/architecture.md): Learn more about how vss-ctx-rag works and its components.
+ * [Getting Started Guide](./guides/index.md): Set up your environment and start integrating vss-ctx-rag into your workflows.
+ * [Examples](./guides/library.md#document-ingestion): Explore examples of vss-ctx-rag workflows.
+ * [Troubleshooting](./troubleshooting.md): Get help with common issues.
+ * [Release Notes](./release-notes.md): Learn about the latest features and improvements.
+
+
+## Table of Contents
 
 ```{toctree}
-:hidden:
 :maxdepth: 2
 
-Quick Start <./intro/index.md>
+Introduction <./intro/index.md>
+Getting Started <./guides/index.md>
 Overview <./overview/index.md>
-Docker Deployment <./guides/docker/index.md>
-Usage <./guides/usage/index.md>
-VSS Blueprint Integration <./vss.md>
-AIQ Plugin Guide <./guides/aiq/index.md>
-Components <./guides/components/index.md>
-Examples <./examples/index.md>
-Metrics <./metrics.md>
 Troubleshooting <./troubleshooting.md>
 Release Notes <./release-notes.md>
 Code of Conduct <./code-of-conduct.md>

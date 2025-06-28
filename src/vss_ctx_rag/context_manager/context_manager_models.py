@@ -83,7 +83,7 @@ class NotificationConfig(BaseModel):
 class ContextManagerConfig(BaseModel):
     summarization: SummarizationConfig
     chat: ChatConfig
-    notification: Optional[NotificationConfig] = None
+    notification: NotificationConfig
     milvus_db_host: str = Field(default="localhost")
     milvus_db_port: str = Field(default="19530")
 

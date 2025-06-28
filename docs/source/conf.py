@@ -56,7 +56,7 @@ with open(os.path.join(API_TREE, "vss_ctx_rag", "__init__.py"), "w") as f:
 
 # -- Project information -----------------------------------------------------
 
-project = "Context Aware RAG"
+project = "VSS_CTX_RAG"
 copyright = "2025, NVIDIA"
 author = "NVIDIA Corporation"
 
@@ -77,6 +77,7 @@ version = ".".join(release.split(".")[:3])
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "autoapi.extension",
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
     "myst_parser",
@@ -88,7 +89,7 @@ extensions = [
     "sphinxcontrib.mermaid",
 ]
 
-autoapi_dirs = []
+autoapi_dirs = [API_TREE]
 
 autoapi_root = "api"
 autoapi_python_class_content = "both"
@@ -210,7 +211,7 @@ html_static_path = ["_static"]
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "Context Aware RAGdoc"
+htmlhelp_basename = "VSS_CTX_RAGdoc"
 
 # -- Options for LaTeX output ------------------------------------------------
 
@@ -233,22 +234,14 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (
-        master_doc,
-        "Context Aware RAG.tex",
-        "Context Aware RAG Documentation",
-        "NVIDIA",
-        "manual",
-    ),
+    (master_doc, "VSS_CTX_RAG.tex", "VSS_CTX_RAG Documentation", "NVIDIA", "manual"),
 ]
 
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, "Context Aware RAG", "Context Aware RAG Documentation", [author], 1)
-]
+man_pages = [(master_doc, "VSS_CTX_RAG", "VSS_CTX_RAG Documentation", [author], 1)]
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -258,10 +251,10 @@ man_pages = [
 texinfo_documents = [
     (
         master_doc,
-        "Context Aware RAG",
-        "Context Aware RAG Documentation",
+        "VSS_CTX_RAG",
+        "VSS_CTX_RAG Documentation",
         author,
-        "Context Aware RAG",
+        "VSS_CTX_RAG",
         "One line description of project.",
         "Miscellaneous",
     ),
@@ -310,7 +303,7 @@ def skip_pydantic_special_attrs(
 
 def setup(sphinx):
     # Work-around for for Pydantic docstrings that trigger parsing warnings
-    # sphinx.connect("autoapi-skip-member", skip_pydantic_special_attrs)
+    sphinx.connect("autoapi-skip-member", skip_pydantic_special_attrs)
 
     # Work-around for performance issue with nvidia_sphinx_theme when parallel_read_safe is True
     import nvidia_sphinx_theme

@@ -15,26 +15,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Introduction
 
-This section contains essential information to get started with the Context-Aware RAG system. Each guide provides fundamental knowledge and setup instructions for working with the system.
-
-## Available Guides
-
-1. [Build](./build.md)
-   - Learn how to build the system from source
-   - Understand build requirements and dependencies
-   - Follow step-by-step build instructions
-
-2. [Setup and Usage](./setup.md)
-   - Learn how to set up and initialize the Context-Aware RAG system
-   - Configure system parameters and settings
-   - Understand the initialization process
+# Introduction to NVIDIA VSS Context RAG
 
 ```{toctree}
-:hidden:
 :maxdepth: 2
 
-Build <./build.md>
-Setup and Usage <./setup.md>
+About VSS Context RAG <./about.md>
+Install VSS Context RAG <./install.md>
 ```

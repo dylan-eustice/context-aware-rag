@@ -51,10 +51,12 @@ from vss_ctx_rag.functions.rag.graph_rag.graph_extraction_func import (
     GraphExtractionFunc,
 )
 from vss_ctx_rag.functions.rag.graph_rag.graph_retrieval_func import GraphRetrievalFunc
+from vss_ctx_rag.functions.rag.adv_graph_rag.adv_graph_rag_func import AdvGraphRAGFunc
 from vss_ctx_rag.functions.rag.vector_rag.vector_retrieval_func import (
     VectorRetrievalFunc,
 )
 from vss_ctx_rag.utils.utils import RequestInfo
+from vss_ctx_rag.utils.globals import DEFAULT_CONCURRENT_DOC_PROCESSING_LIMIT
 
 
 class ContextManagerHandler:
@@ -101,8 +103,11 @@ class ContextManagerHandler:
         self.neo4j_password = None
         self.neo4jDB: Neo4jGraphDB = None
         self.configure_init(config, req_info)
+        self._doc_processing_semaphore = asyncio.Semaphore(
+            DEFAULT_CONCURRENT_DOC_PROCESSING_LIMIT
+        )
 
-    def setup_neo4j(self, chat_config: Dict):
+    def _connect_neo4j(self, chat_config: Dict):
         try:
             self.neo4j_uri = os.getenv("GRAPH_DB_URI")
             if not self.neo4j_uri:
@@ -132,6 +137,21 @@ class ContextManagerHandler:
         except Exception as e:
             logger.error(f"Error setting up Neo4j: {e}")
             raise e
+
+    def setup_neo4j(self, chat_config: Dict, max_tries=5):
+        tries = 0
+        while tries < max_tries:
+            tries += 1
+            try:
+                self._connect_neo4j(chat_config)
+                return
+            except Exception as e:
+                wait_time = 10
+                logger.error(f"Error setting up Neo4j (attempt {tries}/{max_tries}), waiting {wait_time} seconds...")
+                if tries >= max_tries:
+                    logger.error(f"Failed to connect to Neo4j after {max_tries} attempts. Last error: {e}")
+                    raise e
+                time.sleep(wait_time)
 
     def configure_init(self, config: Dict, req_info: Optional[RequestInfo] = None):
         """Initialize system components based on configuration.
@@ -348,6 +368,18 @@ class ContextManagerHandler:
                     if chat_config["rag"] == "graph-rag":
                         if self.neo4jDB is None:
                             self.setup_neo4j(chat_config)
+                        cot = chat_config.get("advanced_features", {}).get("cot", False)
+                        if type(cot) is str:
+                            cot = cot.lower() in ["true", "1"]
+                        logger.debug(f"COT: {cot}")
+                        if cot and self.neo4jDB is not None:
+                            retrieval_function = AdvGraphRAGFunc(
+                                "graph_retrieval_function"
+                            )
+                        else:
+                            retrieval_function = GraphRetrievalFunc(
+                                "retrieval_function"
+                            )
                         self.add_function(
                             ChatFunction("chat")
                             .add_function(
@@ -360,8 +392,7 @@ class ContextManagerHandler:
                             )
                             .add_function(
                                 "retrieval_function",
-                                GraphRetrievalFunc("retrieval_function")
-                                .add_tool("graph_db", self.neo4jDB)
+                                retrieval_function.add_tool("graph_db", self.neo4jDB)
                                 .add_tool(LLM_TOOL_NAME, self.chat_llm)
                                 .config(**chat_config)
                                 .done(),
@@ -371,9 +402,6 @@ class ContextManagerHandler:
                         )
                         self.rag_type = "graph-rag"
                     elif chat_config["rag"] == "vector-rag":
-                        logger.info(f"Setting up vector-rag with chat_config keys: {list(chat_config.keys())}")
-                        logger.info(f"Full chat_config for vector-rag: {chat_config}")
-
                         self.add_function(
                             ChatFunction("chat")
                             .add_function(
@@ -400,6 +428,7 @@ class ContextManagerHandler:
 
     def add_function(self, f: Function):
         assert f.name not in self._functions, str(self._functions)
+        logger.debug(f"Adding function: {f.name}")
         self._functions[f.name] = f
         return self
 
@@ -463,16 +492,22 @@ class ContextManagerHandler:
         elif doc_i is None:
             raise ValueError("Param doc_i missing.")
 
-        # Process document through all functions
-        tasks = []
-        with TimeMeasure("context_manager/aprocess_doc", "yellow"):
-            for _, f in self._functions.items():
-                tasks.append(
-                    asyncio.create_task(
-                        f.aprocess_doc_(doc, doc_i, doc_meta), name=f.name
+        # Process document through all functions with semaphore control
+        async with self._doc_processing_semaphore:
+            tasks = []
+
+            async def timed_function_call(func, doc, doc_i, doc_meta):
+                with TimeMeasure(f"context_manager/aprocess_doc/{func.name}", "yellow"):
+                    return await func.aprocess_doc_(doc, doc_i, doc_meta)
+
+            with TimeMeasure("context_manager/aprocess_doc/total", "green"):
+                for _, f in self._functions.items():
+                    tasks.append(
+                        asyncio.create_task(
+                            timed_function_call(f, doc, doc_i, doc_meta), name=f.name
+                        )
                     )
-                )
-            return await asyncio.gather(*tasks)
+                return await asyncio.gather(*tasks)
 
     async def call(self, state):
         """Execute registered functions with the given state.
@@ -483,12 +518,17 @@ class ContextManagerHandler:
             Dictionary containing results from all function executions
         """
         results = {}
-        with TimeMeasure("context_manager/call", "green"):
+
+        async def timed_call(func_name, call_params):
+            with TimeMeasure(f"context_manager/call/{func_name}", "green"):
+                return await self._functions[func_name](call_params)
+
+        with TimeMeasure("context_manager/call-handler/total", "blue"):
             tasks = []
             task_results = []
             for func, call_params in state.items():
                 tasks.append(
-                    asyncio.create_task(self._functions[func](call_params), name=func)
+                    asyncio.create_task(timed_call(func, call_params), name=func)
                 )
             task_results = await asyncio.gather(*tasks)
             for index, func in enumerate(state):

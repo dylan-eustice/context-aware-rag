@@ -66,6 +66,8 @@ retrieval:
 
 ## Retrieval Strategies
 
+![image](../_static/ca_rag_architecture.jpeg)
+
 Retrieval in this codebase can be configured through different
 approaches:
 
@@ -90,27 +92,31 @@ approaches:
         relationships, and captions are retrieved from the GraphDB and
         passed to an LLM NIM to generate the final answer.
 
-    -   **Multi-stream Support**:
-        -   CA-RAG supports multi-stream processing, allowing users
-            to process multiple live streams or files concurrently.
-        -   For multi-stream processing, stream-id is stored with
+    -
+
+        **Multi-stream Support**:
+
+        :   -   CA-RAG supports multi-stream processing, allowing users
+                to process multiple live streams or files concurrently.
+            -   For multi-stream processing, stream-id is stored with
                 each caption and entity. This allows to retrieve the
                 captions and corresponding entities and relationships
                 for a specific stream.
-          -   To enable multi-stream processing, set the
+            -   To enable multi-stream processing, set the
                 `multi-channel` parameter to `true` in the
                 `config/config.yaml` file. By default, it is set to
                 `false`.
 
-## Summarization
+## Otel and Metrics
 
-The summarization feature allows users to summarize documents.
+The codebase uses OpenTelemetry for tracing and metrics. The following
+environment variables can be set to enable metrics:
 
-Context Aware RAG provides the following methods for summarizing content.
-
-- Batch: This method performs summarization in two stages:
-    - Batching: Groups together documents into batches and generates summaries for each batch.
-    - Aggregation: Combines batch summaries using a secondary prompt (summary_aggregation).
+``` bash
+export VIA_CTX_RAG_ENABLE_OTEL=true
+export VIA_CTX_RAG_EXPORTER=otlp # or console
+export VIA_CTX_RAG_OTEL_ENDPOINT=http://otel_collector:4318 # only used if VIA_CTX_RAG_EXPORTER is otlp
+```
 
 ## Alerts
 
@@ -126,7 +132,7 @@ incident: accident on the road;
 response: first responders arrive for help;
 ```
 
-When an alert is detected, the response is sent to the user via the
+When an alert is detected, the response is sent to the user via the VSS
 notification system. Here is an example of the alert notification:
 
 ``` text

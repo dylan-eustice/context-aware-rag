@@ -27,7 +27,6 @@ COPY pyproject.toml README.md /app/
 
 COPY src/ /app/src/
 COPY service/ /app/service/
-COPY test[s]/ /app/tests/
 COPY config/ /app/config/
 
 RUN mkdir /tmp/via-logs/

@@ -40,7 +40,10 @@ from vss_ctx_rag.functions.rag.graph_rag.constants import (
     HYBRID_SEARCH_FULL_TEXT_QUERY,
     FILTER_LABELS,
 )
-from vss_ctx_rag.utils.globals import DEFAULT_EMBEDDING_PARALLEL_COUNT
+from vss_ctx_rag.utils.globals import (
+    DEFAULT_EMBEDDING_PARALLEL_COUNT,
+    DEFAULT_CONCURRENT_EMBEDDING_LIMIT,
+)
 
 
 class GraphExtraction:
@@ -73,6 +76,9 @@ class GraphExtraction:
         self.previous_chunk_id = 0
         self.last_position = 0
         self.embedding_parallel_count = embedding_parallel_count
+        self._embedding_semaphore = asyncio.Semaphore(
+            DEFAULT_CONCURRENT_EMBEDDING_LIMIT
+        )
 
     def handle_backticks_nodes_relationship_id_type(
         self, graph_document_list: List[GraphDocument]
@@ -136,11 +142,14 @@ class GraphExtraction:
         ):
             data_for_query = []
             logger.info("update embedding and vector index for chunks")
+
+            async def semaphore_controlled_embed(content):
+                async with self._embedding_semaphore:
+                    return await self.graph_db.embeddings.aembed_query(content)
+
             tasks = [
                 asyncio.create_task(
-                    self.graph_db.embeddings.aembed_query(
-                        row["chunk_doc"].source.page_content
-                    )
+                    semaphore_controlled_embed(row["chunk_doc"].source.page_content)
                 )
                 for row in chunkId_chunkDoc_list
             ]
@@ -211,6 +220,7 @@ class GraphExtraction:
                     "previous_id": self.previous_chunk_id,
                     "content_offset": offset,
                     "chunkIdx": chunk_document.metadata["chunkIdx"],
+                    "streamId": chunk.source.metadata["streamId"],
                 }
 
                 if (
@@ -244,7 +254,7 @@ class GraphExtraction:
             query_to_create_chunk_and_PART_OF_relation = """
                 UNWIND $batch_data AS data
                 MERGE (c:Chunk {id: data.id})
-                SET c.text = data.pg_content, c.position = data.position, c.length = data.length, c.uuid=data.uuid, c.content_offset=data.content_offset
+                SET c.text = data.pg_content, c.position = data.position, c.length = data.length, c.uuid=data.uuid, c.content_offset=data.content_offset, c.stream_id=data.streamId
                 WITH data, c
                 SET c.start_time = CASE WHEN data.start_time IS NOT NULL THEN data.start_time END,
                     c.end_time = CASE WHEN data.end_time IS NOT NULL THEN data.end_time END,
@@ -465,8 +475,13 @@ class GraphExtraction:
     async def update_embeddings(self, rows):
         with TimeMeasure("GraphExtraction/UpdatEmbding", "yellow"):
             logger.info("update embedding for entities")
+
+            async def semaphore_controlled_embed(text):
+                async with self._embedding_semaphore:
+                    return await self.graph_db.embeddings.aembed_query(text)
+
             tasks = [
-                asyncio.create_task(self.graph_db.embeddings.aembed_query(row["text"]))
+                asyncio.create_task(semaphore_controlled_embed(row["text"]))
                 for row in rows
             ]
             results = await asyncio.gather(*tasks)
@@ -531,6 +546,7 @@ class GraphExtraction:
             ]
             combined_chunk_document_list = self.get_combined_chunks(docs)
 
+            graph_documents = []
             with TimeMeasure("GraphRAG/aprocess-doc/graph-create/convert", "blue"):
                 graph_documents = await self.transformer.aconvert_to_graph_documents(
                     combined_chunk_document_list
