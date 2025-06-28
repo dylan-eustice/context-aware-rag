@@ -15,18 +15,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# AIQ Function/Tool
+# Using vss_ctx_rag AIQ plugin as a function/tool
 
-The Context Aware RAG AIQ plugin can also be used as a function/tool in custom
+The vss_ctx_rag AIQ plugin can also be used as a function/tool in custom
 AIQ workflows.
 
 In ./src/vss_ctx_rag/aiq_config/function/ there are two
-example config files for using Context Aware RAG as a function/tool for
+example config files for using vss_ctx_rag as a function/tool for
 ingestion and retrieval.
 
 ## Retrieval Function
 
-This is an example of the config file for using Context Aware RAG as a
+This is an example of the config file for using vss_ctx_rag as a
 function/tool for retrieval:
 
 ``` yaml
@@ -90,7 +90,7 @@ information from the vector database.
 
 ## Ingestion Function
 
-This is an example of the config file for using Context Aware RAG as a
+This is an example of the config file for using vss_ctx_rag as a
 function/tool for ingestion:
 
 ``` yaml
@@ -144,7 +144,7 @@ llm_name: nim_llm
 ```
 
 A custom tool call workflow is defined that will use the
-Context Aware RAG ingestion function to ingest documents into the vector
+vss_ctx_rag_ingestion function to ingest documents into the vector
 database. This is so the input passed in will be treated as a document
 and not a query.
 
@@ -158,18 +158,18 @@ nvidia api key for LLM models.
 ### Vector-RAG
 
 ``` bash
-export MILVUS_HOST=<MILVUS_HOST_IP> #milvus host, e.g. localhost
-export MILVUS_PORT=<MILVUS_DB_PORT> #milvus port, e.g. 19530
-export NVIDIA_API_KEY=<NVIDIA_API_KEY> #NVIDIA API key
+export MILVUS_HOST=<MILVUS_HOST_IP>
+export MILVUS_PORT=<MILVUS_DB_PORT>
+export NVIDIA_API_KEY=<NVIDIA_API_KEY>
 ```
 
 ### Graph-RAG
 
 ``` bash
-export GRAPH_DB_URI=<GRAPH_DB_URI> #neo4j uri, e.g. bolt://localhost:7687
-export GRAPH_DB_USERNAME=<GRAPH_DB_USERNAME> #neo4j username, e.g. neo4j
-export GRAPH_DB_PASSWORD=<GRAPH_DB_PASSWORD> #neo4j password, e.g. password
-export NVIDIA_API_KEY=<NVIDIA_API_KEY> #NVIDIA API key
+export GRAPH_DB_URI=<GRAPH_DB_URI>
+export GRAPH_DB_USERNAME=<GRAPH_DB_USERNAME>
+export GRAPH_DB_PASSWORD=<GRAPH_DB_PASSWORD>
+export NVIDIA_API_KEY=<NVIDIA_API_KEY>
 ```
 
 ## Running Data Ingestion
@@ -184,37 +184,29 @@ aiq serve --config_file=./src/vss_ctx_rag/aiq_config/function/config-ingestion-f
 aiq serve --config_file=./src/vss_ctx_rag/aiq_config/function/config-retrieval-function.yml --port <PORT>
 ```
 
-## Example Python API calls to the services
+## Example curl request to the services
 
 Here there are two services running, one for ingestion on port 8000 and
 one for retrieval on port 8001.
 
-### Ingestion Python request
+### Ingestion curl request
 
-```python
-import requests
-
-url = "http://localhost:8000/generate"
-headers = {"Content-Type": "application/json"}
-data = {
-    "rag_workflow": "The bridge is bright blue."
-}
-
-response = requests.post(url, headers=headers, json=data)
-print(response.json())
+``` bash
+curl --request POST  \
+  --url http://localhost:8000/generate   \
+ --header 'Content-Type: application/json'   \
+ --data '{
+     "rag_workflow": "The bridge is bright blue."
+ }'
 ```
 
-### Retrieval Python request
+### Retrieval curl request
 
-```python
-import requests
-
-url = "http://localhost:8001/generate"
-headers = {"Content-Type": "application/json"}
-data = {
-    "input_message": "Is there a bridge? If so describe it"
-}
-
-response = requests.post(url, headers=headers, json=data)
-print(response.json())
+``` bash
+curl --request POST \
+  --url http://localhost:8001/generate \
+  --header 'Content-Type: application/json' \
+  --data '{
+      "input_message": "Is there a bridge? If so describe it"
+  }'
 ```

@@ -15,15 +15,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# AIQ Plugin Guide
-
-This page provides guides on how to install and use the Context Aware RAG plugin.
-
+# NVIDIA VSS Context RAG AIQ Plugin Guide
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 20
 
-Installation <./aiq_install.md>
-Standalone AIQ Service <./aiq_service.md>
-AIQ Function/Tool <./aiq_function.md>
+Install the VSS Context RAG Plugin <./aiq_install.md>
+Running the VSS Context RAG Plugin as an Service <./aiq_service.md>
+Using the VSS Context RAG Plugin in an AIQ Workflow <./aiq_function.md>
 ```

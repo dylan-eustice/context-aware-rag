@@ -15,18 +15,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Contributing
+# Contributing to NVIDIA VSS Context RAG
 
-Contributions to context-aware-rag fall into the following three categories.
+Contributions to vss-ctx-rag fall into the following three categories.
 
 1. To report a bug, request a new feature, or report a problem with
-    documentation, file a [bug](https://github.com/NVIDIA/context-aware-rag/issues)
-    describing in detail the problem or new feature. The context-aware-rag team evaluates
+    documentation, file a [bug](https://github.com/NVIDIA/vss-ctx-rag/issues)
+    describing in detail the problem or new feature. The vss-ctx-rag team evaluates
     and triages bugs and schedules them for a release. If you believe the
     bug needs priority attention, comment on the bug to notify the
     team.
 2. To propose and implement a new Feature, file a new feature request
-    [issue](https://github.com/NVIDIA/context-aware-rag/issues). Describe the
+    [issue](https://github.com/NVIDIA/vss-ctx-rag/issues). Describe the
     intended feature and discuss the design and implementation with the team and
     community. Once the team agrees that the plan is good, go ahead and
     implement it, using the [code contributions](#code-contributions) guide below.
@@ -34,7 +34,7 @@ Contributions to context-aware-rag fall into the following three categories.
     follow the [code contributions](#code-contributions) guide below. If you
     need more context on a particular issue, ask in a comment.
 
-As contributors and maintainers of context-aware-rag, you are expected to abide by context-aware-rag's code of conduct. More information can be found at: [Contributor Code of Conduct](code-of-conduct.md).
+As contributors and maintainers of vss-ctx-rag, you are expected to abide by vss-ctx-rag's code of conduct. More information can be found at: [Contributor Code of Conduct](code-of-conduct.md).
 
 ## Set Up Your Development Environment
 ### Prerequisites
@@ -42,24 +42,25 @@ As contributors and maintainers of context-aware-rag, you are expected to abide 
 - Install [Git](https://git-scm.com/)
 - Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
-context-aware-rag is a Python library that doesn’t require a GPU to run the workflow by default. You can deploy the core workflows using one of the following:
+vss-ctx-rag is a Python library that doesn’t require a GPU to run the workflow by default. You can deploy the core workflows using one of the following:
 - Ubuntu or other Linux distributions, including WSL, in a Python virtual environment.
 
 ### Creating the Environment
 
-1. Fork the context-aware-rag repository choosing **Fork** on the [context-aware-rag repository page](https://github.com/NVIDIA/context-aware-rag).
+1. Fork the vss-ctx-rag repository choosing **Fork** on the [vss-ctx-rag repository page](https://github.com/NVIDIA/vss-ctx-rag).
 
-1. Clone your personal fork of the context-aware-rag repository to your local machine.
+1. Clone your personal fork of the vss-ctx-rag repository to your local machine.
     ```bash
-    git clone <your fork url> context-aware-rag
-    cd context-aware-rag
+    git clone <your fork url> vss-ctx-rag
+    cd vss-ctx-rag
     ```
 
     Then, set the upstream to the main repository and fetch the latest changes:
     ```bash
-    git remote add upstream git@github.com:NVIDIA/context-aware-rag.git
+    git remote add upstream git@github.com:NVIDIA/vss-ctx-rag.git
     git fetch --all
     ```
+
 
 1. Initialize, fetch, and update submodules in the Git repository.
     ```bash
@@ -73,7 +74,7 @@ context-aware-rag is a Python library that doesn’t require a GPU to run the wo
     ```
 
 
-### Install the context-aware-rag Library
+### Install the vss-ctx-rag Library
 
 ```bash
 uv pip install -e .
@@ -83,17 +84,17 @@ uv pip install -e .
 
 ### Your first issue
 
-1. Find an issue to work on. The best way is to search for issues with the [good first issue](https://github.com/NVIDIA/context-aware-rag/issues) label.
+1. Find an issue to work on. The best way is to search for issues with the [good first issue](https://github.com/NVIDIA/vss-ctx-rag/issues) label.
 1. Make sure that you can contribute your work to open source (no license and/or patent conflict is introduced by your code). You will need to [`sign`](#signing-your-work) your commit.
 1. Comment on the issue stating that you are going to work on it.
-1. [Fork the context-aware-rag repository](https://github.com/NVIDIA/context-aware-rag/fork)
+1. [Fork the vss-ctx-rag repository](https://github.com/NVIDIA/vss-ctx-rag/fork)
 1. Code!
     - Make sure to update unit tests!
     - Ensure the [license headers are set properly](#licensing).
-1. When done, [create your pull request](https://github.com/NVIDIA/context-aware-rag/compare). Select `main` as the `Target branch` of your pull request.
+1. When done, [create your pull request](https://github.com/NVIDIA/vss-ctx-rag/compare). Select `main` as the `Target branch` of your pull request.
     - Ensure the body of the pull request references the issue you are working on in the form of `Closes #<issue number>`.
 1. Wait for other developers to review your code and update code as needed.
-1. Once reviewed and approved, a context-aware-rag developer will merge your pull request.
+1. Once reviewed and approved, a vss-ctx-rag developer will merge your pull request.
 
 Remember, if you are unsure about anything, don't hesitate to comment on issues and ask for clarifications!
 
@@ -153,15 +154,15 @@ Remember, if you are unsure about anything, don't hesitate to comment on issues 
 
 ### Seasoned developers
 
-Once you have gotten your feet wet and are more comfortable with the code, you can review the prioritized issues for our next release in our [project boards](https://github.com/NVIDIA/context-aware-rag/projects).
+Once you have gotten your feet wet and are more comfortable with the code, you can review the prioritized issues for our next release in our [project boards](https://github.com/NVIDIA/vss-ctx-rag/projects).
 
-> **Pro Tip:** Always review the release board with the highest number for issues to work on. This is where context-aware-rag developers also focus their efforts.
+> **Pro Tip:** Always review the release board with the highest number for issues to work on. This is where vss-ctx-rag developers also focus their efforts.
 
 Review the unassigned issues and choose an issue that you are comfortable contributing. Ensure you comment on the issue before you begin to inform others that you are working on it. If you have questions about implementing the issue, comment your questions in the issue instead of the PR.
 
-## Developing with context-aware-rag
+## Developing with vss-ctx-rag
 
-Refer to the [Get Started](./intro/quick_start.md) guide to quickly begin development.
+Refer to the [Get Started](./guides/index.md) guide to quickly begin development.
 
 
 ## Licensing

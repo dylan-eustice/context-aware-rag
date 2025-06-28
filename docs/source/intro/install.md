@@ -15,25 +15,45 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Building Documentation
+# Installation
+
+## Installing from source
 
 ### Prerequisites
-If you don't already have a uv environment setup, refer to the [Prerequisites](./source/intro/setup.md) guide.
 
-## Install Documentation Dependencies
+Before you begin using vss-ctx-rag, ensure that you meet the following software prerequisites.
+
+- Install [Git](https://git-scm.com/)
+- Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
+
+1. Clone the repository
 
 ```bash
-uv pip install -e ".[docs]"
+git clone https://gitlab-master.nvidia.com/via/via-ctx-rag.git
+cd via-ctx-rag
 ```
 
-## Build the Documentation
+2. Create a Python environment
 
 ```bash
-make -C docs
+uv venv --seed .venv
+source .venv/bin/activate
 ```
 
-## Verify the Documentation
+3. Install the vss-ca-rag library
 
+```
+git clone
+
+uv pip install -e .
+```
+
+4. Optionally: Build the wheel file
 ```bash
-firefox build/html/index.html
+uv build
+```
+
+5. Install the wheel file
+```bash
+uv pip install dist/vss-ctx-rag-0.5.0-py3-none-any.whl
 ```

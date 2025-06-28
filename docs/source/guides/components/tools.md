@@ -14,9 +14,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-# Tools
 
-## Adding Custom Tools
+# Adding Custom Tools
 
 Tools are components that can be used in functions. Tools can include LLMs, databases, etc.
 

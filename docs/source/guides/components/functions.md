@@ -15,9 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Functions
-
-## Writing Custom Functions
+# Writing Custom Functions
 
 The `Function` class serves as a base class for all functions in Context Manager. The idea of the `Function` class is to transform a state dictionary. Tools and functions can be added to the function, as well as configure the function with parameters.
 

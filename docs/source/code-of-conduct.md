@@ -15,5 +15,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Code of Conduct
+# NVIDIA VSS Context RAG Code of Conduct
 This project has adopted the [Contributor Covenant Code of Conduct](https://docs.rapids.ai/resources/conduct/).

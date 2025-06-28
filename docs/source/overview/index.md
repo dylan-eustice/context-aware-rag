@@ -16,9 +16,7 @@ limitations under the License.
 -->
 
 
-# Overview
-
-Here is an overview of Context Aware RAG.
+# Overview of NVIDIA VSS Context RAG
 
 ```{toctree}
 :maxdepth: 2
@@ -26,5 +24,4 @@ Here is an overview of Context Aware RAG.
 Architecture <./architecture.md>
 Features <./features.md>
 Optimization <./perf.md>
-Configuration <./configuration.md>
 ```

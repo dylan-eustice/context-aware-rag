@@ -15,79 +15,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Setup and Usage
+# Using the Python Library
 
-## Running dependent containers and setting up environment variables
+## Setting up config file
 
-#### Milvus
-
-``` bash
-curl -sfL https://raw.githubusercontent.com/milvus-io/milvus/master/scripts/standalone_embed.sh -o standalone_embed.sh
-
-
-bash standalone_embed.sh start
-```
-
-This will start the milvus service by default on port 19530.
-
-If using Graph-RAG, you will need to run the following container.
-
-#### Graph-RAG: Neo4J
-
-``` bash
-docker run -d \
-  --name neo4j \
-  -p <NEO4J_PORT>:7687 \
-  -e NEO4J_AUTH=<GRAPH_DB_USERNAME>/<GRAPH_DB_PASSWORD> \
-  neo4j:5.26.4
-```
-
-#### ENV Setup
-
-##### Getting NVIDIA API Key
-NVIDIA_API_KEY is NVIDIA Personal Key to use LLM and Rerank and Embeddings NIMs from build.nvidia.com. This key is essential for accessing NVIDIA’s cloud services and models. Here are the steps to get the NVIDIA API Key:
-
-1. Log in to https://build.nvidia.com/explore/discover.
-
-2. Navigate to any NIM e.g. https://build.nvidia.com/meta/llama3-70b.
-
-3. Search for Get API Key on the page and click on it.
-
-![Get API Key](../_static/getAPIkey.png)
-
-4. Click on Generate Key.
-
-![Generate Key](../_static/buttontogenerateAPIkey.png)
-
-5. Store the generated API Key securely for future use.
-
-Now setup the environment variables depending on the type of RAG.
-
-##### Vector-RAG
-
-``` bash
-export MILVUS_HOST=<MILVUS_HOST_IP> #milvus host, e.g. localhost
-export MILVUS_PORT=<MILVUS_DB_PORT> #milvus port, e.g. 19530
-export NVIDIA_API_KEY=<NVIDIA_API_KEY> #NVIDIA API key
-```
-
-##### Graph-RAG
-
-``` bash
-export GRAPH_DB_URI=bolt://<HOST>:<NEO4J_PORT> #neo4j uri, e.g. bolt://localhost:7687
-export GRAPH_DB_USERNAME=<GRAPH_DB_USERNAME> #neo4j username, e.g. neo4j
-export GRAPH_DB_PASSWORD=<GRAPH_DB_PASSWORD> #neo4j password, e.g. password
-export NVIDIA_API_KEY=<NVIDIA_API_KEY> #NVIDIA API key
-```
-
-## Using the Python Library
-
-The Context Aware RAG library can be used to both add and retrieve documents using python.
-
-### Setting up config file
-
-First create a config file to set the LLMs, prompts, and parameters at `config/config.yaml`. Refer to the [CA RAG Configuration](../overview/configuration.md) guide for more details.
-
+First create a config file to set the llms, prompts, and parameters.
 Here is an example of the config file:
 
 ``` yaml
@@ -128,28 +60,33 @@ chat:
     base_url: https://ai.api.nvidia.com/v1/retrieval/nvidia/llama-3_2-nv-rerankqa-1b-v2/reranking
 ```
 
-#### Summarization Configuration Overview
+### ENV Setup
 
-The `summarization` section outlines the system's summarization capabilities. It supports batch processing using a specified LLM model and embedding model. Prompts can be customized for various use cases. The default prompts are tailored to generate captions and summaries for warehouse videos, emphasizing irregular events.
+Now setup the environment variables depending on the type of RAG.
 
-**Caption Prompt:** This prompt is used in VSS only and are not used in Context Aware RAG and can be safely ignored if only
-using CA RAG.
+### Vector-RAG
 
-**Caption Summarization Prompt:** This prompt generates a summary from a batch of captions. The `batch_size` parameter specifies the number of captions to be combined.
+``` bash
+export MILVUS_HOST=<MILVUS_HOST_IP>
+export MILVUS_PORT=<MILVUS_DB_PORT>
+export NVIDIA_API_KEY=<NVIDIA_API_KEY>
+```
 
-**Summary Aggregation Prompt:** After generating all batch summaries, this prompt is used to combine them into the final summary.
+### Graph-RAG
 
-#### Chat Configuration Overview
+``` bash
+export GRAPH_DB_URI=<GRAPH_DB_URI>
+export GRAPH_DB_USERNAME=<GRAPH_DB_USERNAME>
+export GRAPH_DB_PASSWORD=<GRAPH_DB_PASSWORD>
+export NVIDIA_API_KEY=<NVIDIA_API_KEY>
+```
 
-The `chat` section configures the chat capabilities, specifying the RAG type, LLM model, embedding model, and reranker model.
+## Context Manager Setup
 
-### Context Manager Setup
-
-Next, set up the context manager. The context manager is used for both adding and retrieving documents.
+Now setup the context manager. Context manager is used to both add
+documents and retrieve documents.
 
 ``` python
-from vss_ctx_rag.context_manager import ContextManager
-
 with open("config/config.yaml", mode="r", encoding="utf8") as c:
         config = yaml.safe_load(c)
     ### IF USING VECTOR-RAG
@@ -157,6 +94,23 @@ with open("config/config.yaml", mode="r", encoding="utf8") as c:
     config["milvus_db_port"] = os.environ["MILVUS_PORT"]
 
     config["api_key"] = os.environ["NVIDIA_API_KEY"]
+
+    DOC_META = {
+       "streamId": "",
+       "chunkIdx": -1,
+       "file": "",
+       "pts_offset_ns": 0,
+       "start_pts": 0,
+       "end_pts": 0,
+       "start_ntp": "1970-01-01T00:01:00.000Z",
+       "end_ntp": "1970-01-01T00:02:00.000Z",
+       "start_ntp_float": 0.0,
+       "end_ntp_float": 0.0,
+       "is_first": False,
+       "is_last": False,
+       "uuid": "",
+       "cv_meta": "[]",
+   }
 
     class RequestInfo:
         def __init__(self):
@@ -185,18 +139,18 @@ with open("config/config.yaml", mode="r", encoding="utf8") as c:
 
     req_info = RequestInfo()
 
-    cm = ContextManager(config=config)
+    cm = ContextManager(config=config, process_index=random.randint(0, 1000000))
     cm.configure_update(config=config, req_info=req_info)
     ## cm doing work here
     cm.process.stop()
 ```
 
-### Document Ingestion
+## Document Ingestion
 
 Context manager can be used to ingest documents.
 
 ``` python
-cm.add_doc("User1: I went hiking to Mission Peak") ## Add documents to the context manager
+cm.add_doc("User1: I went hiking to Mission Peak", doc_meta=DOC_META) ## Add documents to the context manager
 ```
 
 ## Document Retrieval
@@ -204,12 +158,6 @@ cm.add_doc("User1: I went hiking to Mission Peak") ## Add documents to the conte
 To retrieve documents, use the following code as an example:
 
 ``` python
-## Call to ingestion function to signal end of document ingestion
-ctx_mgr.call(
-    {
-        "ingestion_function": {}
-    }
-)
 question = "Where did the user go hiking?"
 result = cm.call(
     {

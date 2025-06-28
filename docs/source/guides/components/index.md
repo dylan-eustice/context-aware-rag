@@ -15,14 +15,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Components
-
-This page provides information on Context Aware RAG components and guides on how to add custom function and tools to Context Aware RAG.
-
+# NVIDIA VSS Context RAG Guides
 
 ```{toctree}
 :maxdepth: 2
 
-Functions <./functions.md>
-Tools <./tools.md>
+Adding Custom Functions <./functions.md>
+Adding Custom Tools <./tools.md>
 ```
