@@ -142,6 +142,26 @@ class AdvGraphRetrieval:
             logger.error(f"Error fetching entity types: {e}")
             return []
 
+    async def get_all_stream_ids(self) -> List[str]:
+        """Fetch all distinct stream_id values from the Neo4j database"""
+        logger.info("Fetching all stream_ids from Neo4j")
+
+        query = """
+        MATCH (n:Chunk)
+        WHERE n.stream_id IS NOT NULL
+        RETURN DISTINCT n.stream_id as stream_id
+        ORDER BY stream_id
+        """
+
+        try:
+            result = await self.graph_db.arun_cypher_query(query)
+            stream_ids = [record["stream_id"] for record in result]
+            logger.info(f"Found {len(stream_ids)} stream_ids: {stream_ids}")
+            return stream_ids
+        except Exception as e:
+            logger.error(f"Error fetching stream_ids: {e}")
+            return []
+
     def _build_property_filters(self, properties: Dict) -> str:
         if not properties:
             return ""
@@ -194,17 +214,17 @@ class AdvGraphRetrieval:
         return await self.graph_db.arun_cypher_query(query)
 
     async def retrieve_temporal_context(
-        self, start_time: float, end_time: float
+        self, start_time: float, end_time: float, stream_ids: List[str] = None
     ) -> List[Dict]:
-        """Retrieve all events between start and end times"""
-        # Format times for human-readable logging
-        start_relative = self._format_relative_time(start_time) if start_time else "beginning"
-        end_relative = self._format_relative_time(end_time) if end_time else "now"
-
-        logger.info(f"Retrieving temporal context from {start_relative} to {end_relative}")
+        """Retrieve all events between start and end times, optionally filtered by stream_id"""
+        logger.info(f"Retrieving temporal context between {start_time} and {end_time}")
+        if stream_ids:
+            logger.info(f"Filtering by stream_ids: {stream_ids}")
 
         result = []
         temporal_filter = ""
+        stream_filter = ""
+
         if start_time is None and end_time is None:
             return result
         if start_time is not None:
@@ -218,10 +238,19 @@ class AdvGraphRetrieval:
             AND toFloat(n.end_time) <= {end_time}
             """
             )
+
+        if stream_ids:
+            # Create filter for multiple stream_ids
+            stream_conditions = [f"n.stream_id = '{stream_id}'" for stream_id in stream_ids]
+            stream_filter = f"""
+            AND ({' OR '.join(stream_conditions)})
+            """
+
         query = f"""
         MATCH (n: Chunk)
         WHERE n.start_time IS NOT NULL AND n.end_time IS NOT NULL
         {temporal_filter}
+        {stream_filter}
         RETURN n
             ORDER BY n.start_time
             LIMIT {self.top_k or 10}
@@ -235,12 +264,15 @@ class AdvGraphRetrieval:
         start_time: float = None,
         end_time: float = None,
         sort_by: str = None,
+        stream_ids: List[str] = None,
     ) -> List[Dict]:
         """Retrieve semantically similar content using vector similarity search"""
         logger.info(
             f"Retrieving semantic context for question: {question} "
             f"between {start_time} and {end_time}"
         )
+        if stream_ids:
+            logger.info(f"Filtering by stream_ids: {stream_ids}")
 
         try:
             result = await self.doc_retriever.ainvoke(
@@ -249,6 +281,13 @@ class AdvGraphRetrieval:
             # logger.info(f"Semantic search results raw: {result}")
             processed_results = []
             for doc in result:
+                # Filter by stream_id if specified
+                if stream_ids:
+                    doc_stream_id = doc.metadata.get("stream_id")
+                    if doc_stream_id not in stream_ids:
+                        logger.debug(f"Skipping document with stream_id '{doc_stream_id}' (not in {stream_ids})")
+                        continue
+
                 processed_results.append(
                     {
                         "n": {
@@ -256,8 +295,8 @@ class AdvGraphRetrieval:
                             "start_time": doc.metadata.get("start_time", ""),
                             "end_time": doc.metadata.get("end_time", ""),
                             "chunkIdx": doc.metadata.get("chunkIdx", ""),
-                            "stream_id": doc.metadata.get("stream_id", ""),
                             "score": doc.state.get("query_similarity_score", 0),
+                            "stream_id": doc.metadata.get("stream_id", ""),
                         }
                     }
                 )
@@ -289,7 +328,8 @@ class AdvGraphRetrieval:
             b. end_time: How many seconds in the past to end the time range. If not present, set to None.
         4. Sort by: "start_time" or "end_time" or "score"
         5. Location references
-        6. Retrieval strategy (similarity, temporal)
+        6. Stream IDs mentioned. Available stream_ids: {await self.get_all_stream_ids()}
+        7. Retrieval strategy (similarity, temporal)
             a. similarity: If the question needs to find similar content, return the retrieval strategy as similarity
             b. temporal: If the question is about a specific time range and you can return at least one of the start and end time, then return the strategy as temporal and the start and end time in the time_references field as float or null if not present. Strategy cannot be temporal if both start and end time are not present. The start and end time should be in seconds.
 
@@ -297,13 +337,29 @@ class AdvGraphRetrieval:
         Example response:
         {{\
             "entity_types": ["Dog", "Ball"],\
-            "relationships": ["PICKED_UP", "DROPPED"],\
+            "relationships": ["DROPPED", "PICKED_UP"],\
             "time_references": {{\
                 "start": 300.0,\
                 "end": 30.0\
             }},\
             "sort_by": "start_time", // "start_time" or "end_time" or "score" \
             "location_references": ["backyard"],\
+            "stream_ids": [],\
+            "retrieval_strategy": "temporal"\
+        }}\
+
+        Example question with stream: "Summarize channel 3 over the last 5 minutes."
+        Example response:
+        {{\
+            "entity_types": [],\
+            "relationships": [],\
+            "time_references": {{\
+                "start": 300.0,\
+                "end": 0.0\
+            }},\
+            "sort_by": "start_time",\
+            "location_references": [],\
+            "stream_ids": ["fm-radio-ch3"],\
             "retrieval_strategy": "temporal"\
         }}\
 
@@ -363,6 +419,7 @@ class AdvGraphRetrieval:
                             "relationships": [],
                             "time_references": {},
                             "location_references": [],
+                            "stream_ids": [],
                             "sort_by": "score",
                             "retrieval_strategy": "similarity",
                         }
@@ -377,6 +434,7 @@ class AdvGraphRetrieval:
             time_refs = analysis.get("time_references", {})
             start_time = None
             end_time = None
+            stream_ids = analysis.get("stream_ids", [])
 
             # Temporal context retrieval
             if time_refs:
@@ -386,7 +444,7 @@ class AdvGraphRetrieval:
 
             if strategy == "temporal":
                 temporal_data = await self.retrieve_temporal_context(
-                    start_time, end_time
+                    start_time, end_time, stream_ids
                 )
                 logger.info(f"Temporal Contexts...")
                 if temporal_data:
@@ -402,6 +460,7 @@ class AdvGraphRetrieval:
                     start_time=start_time,
                     end_time=end_time,
                     sort_by=analysis.get("sort_by", "score"),
+                    stream_ids=stream_ids,
                 )
                 logger.info(f"Semantic Contexts...")
                 if semantic_data:
