@@ -269,22 +269,55 @@ class AdvGraphRetrieval:
         1. Entity types mentioned. Available entity types: {await self.get_all_entity_types()}
         2. Relationships of interest
         3. Time references
+            a. start_time: How many seconds in the past to start the time range. If not present, set to None.
+            b. end_time: How many seconds in the past to end the time range. If not present, set to None.
         4. Sort by: "start_time" or "end_time" or "score"
         5. Location references
         6. Retrieval strategy (similarity, temporal)
             a. similarity: If the question needs to find similar content, return the retrieval strategy as similarity
             b. temporal: If the question is about a specific time range and you can return at least one of the start and end time, then return the strategy as temporal and the start and end time in the time_references field as float or null if not present. Strategy cannot be temporal if both start and end time are not present. The start and end time should be in seconds.
 
-        Example response:
+        Example question #1: "Summarize what you've heard in the last 10 minutes"
+        Example response #1 (look between 600-0 seconds ago):
         {{\
-            "entity_types": ["Person", "Box"],\
-            "relationships": ["DROPPED", "PICKED_UP"],\
+            "entity_types": [],\
+            "relationships": [],\
             "time_references": {{\
-                "start": 60.0,\
-                "end": 400.0\
+                "start": 600.0,\
+                "end": 0.0\
             }},\
             "sort_by": "start_time", // "start_time" or "end_time" or "score" \
-            "location_references": ["warehouse_zone_A"],\
+            "location_references": [],\
+            "retrieval_strategy": "temporal"\
+        }}\
+
+
+        Example question #2: "Between 30 seconds and 5 minutes ago, has the dog found the ball?"
+        Example response #2 (look between 30-300 seconds ago):
+        {{\
+            "entity_types": ["Dog", "Ball"],\
+            "relationships": ["PICKED_UP", "DROPPED"],\
+            "time_references": {{\
+                "start": 300.0,\
+                "end": 30.0\
+            }},\
+            "sort_by": "start_time", // "start_time" or "end_time" or "score" \
+            "location_references": ["backyard"],\
+            "retrieval_strategy": "temporal"\
+        }}\
+
+
+        Example question #3: "What was happening 1 hour ago?"
+        Example response #3 (look 3600 seconds ago with 5 minute window):
+        {{\
+            "entity_types": [],\
+            "relationships": [],\
+            "time_references": {{\
+                "start": 3700.0,\
+                "end": 3450.0\
+            }},\
+            "sort_by": "start_time", // "start_time" or "end_time" or "score" \
+            "location_references": [],\
             "retrieval_strategy": "temporal"\
         }}\
 

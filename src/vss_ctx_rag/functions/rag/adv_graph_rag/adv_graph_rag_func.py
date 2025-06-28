@@ -137,12 +137,17 @@ class AdvGraphRAGFunc(Function):
             # Add relevant chat history to context
             if self.chat_history:
                 # Format chat history as additional context
-                history_context = "\nRelevant chat history:\n"
+                history_context = (
+                    "\nRelevant chat history is included below. "
+                    "Only use the chat history if it is relevant to the question and if "
+                    "it seems like there is some context there that the user is referring to "
+                    "in the current question.\n"
+                )
                 for entry in self.chat_history[-3:]:  # Consider last 3 interactions
                     q = entry.get("question", "")
                     a = entry.get("response", "")
                     if q and a:
-                        history_context += f"Q: {q}\nA: {a}\n"
+                        history_context += f"User: {q}\nAssistant: {a}\n"
                 context.append(history_context)
 
             logger.debug(f"Context: {context}")
