@@ -16,37 +16,38 @@ limitations under the License.
 -->
 
 
-# NVIDIA Context Aware RAG
+# NVIDIA VSS Context RAG (vss-ctx-rag)
 
 ![image](docs/source/_static/data_architecture.png)
 
-Context Aware RAG is a flexible library designed to seamlessly integrate into existing data processing workflows to build customized data ingestion and retrieval (RAG) pipelines.
+vss-ctx-rag is a flexible library designed to seamlessly integrate into existing data processing workflows to build customized data ingestion and retrieval (RAG) pipelines.
 
 ## Key Features
 
-- [**Data Ingestion Service:**](https://nvidia.github.io/context-aware-rag/overview/features.html#ingestion-strategies) Add data to the RAG pipeline from a variety of sources.
-- [**Data Retrieval Service:**](https://nvidia.github.io/context-aware-rag/overview/features.html#retrieval-strategies) Retrieve data from the RAG pipeline using natural language queries.
-- [**Function and Tool Components:**](https://nvidia.github.io/context-aware-rag/overview/architecture.html#components) Easy to create custom functions and tools to support your existing workflows.
-- [**GraphRAG:**](https://nvidia.github.io/context-aware-rag/overview/features.html#retrieval-strategies) Seamlessly extract knowledge graphs from data to support your existing workflows.
-- [**Observability:**](https://nvidia.github.io/context-aware-rag/metrics.html) Monitor and troubleshoot your workflows with any OpenTelemetry-compatible monitoring tool.
+- [**Data Ingestion Service:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/overview/features.html#ingestion-strategies) Add data to the RAG pipeline from a variety of sources.
+- [**Data Retrieval Service:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/overview/features.html#retrieval-strategies) Retrieve data from the RAG pipeline using natural language queries.
+- [**Function and Tool Components:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/overview/architecture.html#components) Easy to create custom functions and tools to support your existing workflows.
+- [**Swappable Databases:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/overview/architecture.html#) Use a variety of databases to store and retrieve data.
+- [**GraphRAG Support:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/overview/architecture.html#) Seamlessly extract knowledge graphs from data to support your existing workflows.
+- [**Observability:**](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/overview/features.html#otel-and-metrics) Monitor and troubleshoot your workflows with any OpenTelemetry-compatible monitoring tool.
 
 
-With Context Aware RAG, you can quickly build RAG pipelines to support your existing workflows.
+With vss-ctx-rag, you can quickly build RAG pipelines to support your existing workflows.
 
 ## Links
 
- * [Documentation](https://nvidia.github.io/context-aware-rag): Explore the full documentation for Context Aware RAG.
- * [Context Aware RAG Architecture](https://nvidia.github.io/context-aware-rag/overview/architecture.html): Learn more about how Context Aware RAG works and its components.
- * [Getting Started Guide](https://nvidia.github.io/context-aware-rag/guides/index.html): Set up your environment and start integrating Context Aware RAG into your workflows.
- * [Examples](https://nvidia.github.io/context-aware-rag/guides/library.html#document-ingestion): Explore examples of Context Aware RAG workflows.
- * [Troubleshooting](https://nvidia.github.io/context-aware-rag/troubleshooting.html): Get help with common issues.
- * [Release Notes](https://nvidia.github.io/context-aware-rag/release-notes.html): Learn about the latest features and improvements.
+ * [Documentation](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/index.html): Explore the full documentation for vss-ctx-rag.
+ * [vss-ctx-rag Architecture](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/overview/architecture.html): Learn more about how vss-ctx-rag works and its components.
+ * [Getting Started Guide](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/guides/index.html): Set up your environment and start integrating vss-ctx-rag into your workflows.
+ * [Examples](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/guides/library.html#document-ingestion): Explore examples of vss-ctx-rag workflows.
+ * [Troubleshooting](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/troubleshooting.html): Get help with common issues.
+ * [Release Notes](https://via.gitlab-master-pages.nvidia.com/via-ctx-rag/release-notes.html): Learn about the latest features and improvements.
 
 ## Getting Started
 
 ### Prerequisites
 
-Before you begin using Context Aware RAG, ensure that you have the following software installed.
+Before you begin using vss-ctx-rag, ensure that you have the following software installed.
 
 - Install [Git](https://git-scm.com/)
 - Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
@@ -54,31 +55,32 @@ Before you begin using Context Aware RAG, ensure that you have the following sof
 
 ### Installation
 
-#### Clone the repository
+#### Installing from source
 
-```bash
-git clone git@github.com:NVIDIA/context-aware-rag.git
-cd context-aware-rag/
-```
 
-#### Create a virtual environment using uv
+##### Create a virtual environment using uv
 
 ```bash
 uv venv --seed .venv
 source .venv/bin/activate
 ```
 
-#### Installing from source
+##### Clone the repository and install the dependencies
 
 ```bash
+git clone
+
 uv pip install -e .
 ```
 
-#### Optional: Building and Installing the wheel file
-
+##### Optionally: Build the wheel file
 ```bash
 uv build
-uv pip install vss_ctx_rag-0.5.0-py3-none-any.whl
+```
+
+######  Install the wheel file
+```bash
+uv pip install dist/vss-ctx-rag-0.5.0-py3-none-any.whl
 ```
 
 ## Service Example
@@ -100,12 +102,6 @@ Create a .env file in the root directory and set the following variables:
    VSS_CTX_PORT_IN=<DATA INGESTION PORT>
 ```
 
-### Build docker
-
-```bash
-make -C docker build
-```
-
 ### Using docker compose
 
 ```bash
@@ -115,11 +111,11 @@ make -C docker start_compose
 This will start the following services:
 
 
-* ctx-rag-data-ingestion
+* vss-ctx-rag-data-ingestion
 
   * Service available at `http://<HOST>:<VSS_CTX_PORT_IN>`
 
-* ctx-rag-data-retrieval
+* vss-ctx-rag-data-retrieval
 
   * Service available at `http://<HOST>:<VSS_CTX_PORT_RET>`
 
@@ -129,8 +125,9 @@ This will start the following services:
 
 * milvus
 
-* otel-collector
+  * UI available at `http://<HOST>:9091`
 
+* otel-collector
 * jaeger
 
   * UI available at `http://<HOST>:16686`
@@ -141,7 +138,7 @@ This will start the following services:
 
 * cassandra
 
-To change the storage volumes, export `DOCKER_VOLUME_DIRECTORY` to the desired directory.
+To change the storage volumes, export DOCKER_VOLUME_DIRECTORY to the desired directory.
 
 ### Data Ingestion Example
 
@@ -202,7 +199,7 @@ base_url = "http://<HOST>:<VSS_CTX_PORT_RET>"
 headers = {"Content-Type": "application/json"}
 
 ### Initialize the service with the same uuid as the data ingestion service
-init_data = {"config_path": "/app/config/config.yaml", "uuid": "1"}
+init_data = {"config_path": "/app/service/config.yaml", "uuid": "1"}
 response = requests.post(
     f"{base_url}/init", headers=headers, data=json.dumps(init_data)
 )
@@ -221,7 +218,7 @@ print(response.json()["result"])
 
 ## Acknowledgements
 
-We would like to thank the following projects that made Context Aware RAG possible:
+We would like to thank the following projects that made vss-ctx-rag possible:
 
 - [FastAPI](https://github.com/tiangolo/fastapi)
 - [LangChain](https://github.com/langchain-ai/langchain)
