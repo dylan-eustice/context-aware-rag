@@ -15,7 +15,7 @@
 
 [project]
 name = "vss_ctx_rag"
-version = "0.5.0"
+version = "0.5.1-rc5"
 description = ""
 readme = "README.md"
 requires-python = ">=3.10"
