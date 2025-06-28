@@ -63,6 +63,15 @@ class AdvGraphRetrieval:
         self.doc_retriever = self.create_document_retriever_chain()
         logger.info(f"Initialized with top_k={top_k}")
 
+    def _format_relative_time(self, timestamp: float) -> str:
+        """Format timestamp relative to current time in seconds"""
+        if timestamp is None:
+            return "unknown time"
+
+        now = datetime.now(timezone.utc).timestamp()
+        diff = now - timestamp
+        return f"{int(diff)} seconds ago"
+
     def create_document_retriever_chain(self):
         with TimeMeasure("GraphRetrieval/CreateDocRetChain", "blue"):
             try:
@@ -188,7 +197,12 @@ class AdvGraphRetrieval:
         self, start_time: float, end_time: float
     ) -> List[Dict]:
         """Retrieve all events between start and end times"""
-        logger.info(f"Retrieving temporal context between {start_time} and {end_time}")
+        # Format times for human-readable logging
+        start_relative = self._format_relative_time(start_time) if start_time else "beginning"
+        end_relative = self._format_relative_time(end_time) if end_time else "now"
+
+        logger.info(f"Retrieving temporal context from {start_relative} to {end_relative}")
+
         result = []
         temporal_filter = ""
         if start_time is None and end_time is None:
@@ -279,23 +293,8 @@ class AdvGraphRetrieval:
             a. similarity: If the question needs to find similar content, return the retrieval strategy as similarity
             b. temporal: If the question is about a specific time range and you can return at least one of the start and end time, then return the strategy as temporal and the start and end time in the time_references field as float or null if not present. Strategy cannot be temporal if both start and end time are not present. The start and end time should be in seconds.
 
-        Example question #1: "Summarize what you've heard in the last 10 minutes"
-        Example response #1 (look between 600-0 seconds ago):
-        {{\
-            "entity_types": [],\
-            "relationships": [],\
-            "time_references": {{\
-                "start": 600.0,\
-                "end": 0.0\
-            }},\
-            "sort_by": "start_time", // "start_time" or "end_time" or "score" \
-            "location_references": [],\
-            "retrieval_strategy": "temporal"\
-        }}\
-
-
-        Example question #2: "Between 30 seconds and 5 minutes ago, has the dog found the ball?"
-        Example response #2 (look between 30-300 seconds ago):
+        Example question: "Between 30 seconds and 5 minutes ago, has the dog found the ball?"
+        Example response:
         {{\
             "entity_types": ["Dog", "Ball"],\
             "relationships": ["PICKED_UP", "DROPPED"],\
@@ -308,20 +307,16 @@ class AdvGraphRetrieval:
             "retrieval_strategy": "temporal"\
         }}\
 
-
-        Example question #3: "What was happening 1 hour ago?"
-        Example response #3 (look 3600 seconds ago with 5 minute window):
-        {{\
-            "entity_types": [],\
-            "relationships": [],\
-            "time_references": {{\
-                "start": 3700.0,\
-                "end": 3450.0\
-            }},\
-            "sort_by": "start_time", // "start_time" or "end_time" or "score" \
-            "location_references": [],\
-            "retrieval_strategy": "temporal"\
-        }}\
+        NOTE: When setting time references (start_time, end_time), we should focus on 3 classes of time windows:
+        1. Window of the last X seconds
+            a. Summarize the last half hour -> start_time, end_time = 1800, 0
+            b. Look for <topic> over the previous 10 mins -> start_time, end_time = 600, 0
+        2. Window between X and Y seconds ago
+            a. Look for <topic> between 10 and 20 seconds ago -> start_time, end_time = 20, 10
+            b. What was being discussed between 5 minutes and half an hour ago -> start_time, end_time = 1800, 300
+        3. Window centered around X seconds ago, with a window of Y seconds (default Y = 300 seconds)
+            a. Look for <topic> from 10 minutes ago -> start_time, end_time = 900, 300
+            b. What was being discussed and hour ago? Use a 15 minute window. -> start_time, end_time = 4500, 2700
 
         Output only valid JSON. Do not include any other text.
         """
