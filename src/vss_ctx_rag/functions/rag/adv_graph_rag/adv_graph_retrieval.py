@@ -15,6 +15,7 @@
 
 """adv_graph_retrieval.py: File contains AdvGraphRetrieval class"""
 
+from datetime import datetime, timezone
 from typing import List, Dict, Any
 import json
 
@@ -383,8 +384,9 @@ class AdvGraphRetrieval:
 
             # Temporal context retrieval
             if time_refs:
-                start_time = time_refs.get("start")
-                end_time = time_refs.get("end")
+                tnow = datetime.now(timezone.utc).timestamp()
+                start_time = tnow - time_refs.get("start") if time_refs.get("start") is not None else None
+                end_time = tnow - time_refs.get("end") if time_refs.get("end") is not None else None
 
             if strategy == "temporal":
                 temporal_data = await self.retrieve_temporal_context(
