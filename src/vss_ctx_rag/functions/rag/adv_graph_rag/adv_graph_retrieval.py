@@ -242,6 +242,7 @@ class AdvGraphRetrieval:
                             "start_time": doc.metadata.get("start_time", ""),
                             "end_time": doc.metadata.get("end_time", ""),
                             "chunkIdx": doc.metadata.get("chunkIdx", ""),
+                            "stream_id": doc.metadata.get("stream_id", ""),
                             "score": doc.state.get("query_similarity_score", 0),
                         }
                     }
@@ -440,6 +441,7 @@ class AdvGraphRetrieval:
                             metadata={
                                 "start_time": ctx.get("n", {}).get("start_time", ""),
                                 "end_time": ctx.get("n", {}).get("end_time", ""),
+                                "stream_id": ctx.get("n", {}).get("stream_id", ""),
                             },
                         )
                         documents.append(doc)

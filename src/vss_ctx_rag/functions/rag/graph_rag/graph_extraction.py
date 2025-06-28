@@ -220,6 +220,7 @@ class GraphExtraction:
                     "previous_id": self.previous_chunk_id,
                     "content_offset": offset,
                     "chunkIdx": chunk_document.metadata["chunkIdx"],
+                    "streamId": chunk.source.metadata["streamId"],
                 }
 
                 if (
@@ -253,7 +254,7 @@ class GraphExtraction:
             query_to_create_chunk_and_PART_OF_relation = """
                 UNWIND $batch_data AS data
                 MERGE (c:Chunk {id: data.id})
-                SET c.text = data.pg_content, c.position = data.position, c.length = data.length, c.uuid=data.uuid, c.content_offset=data.content_offset
+                SET c.text = data.pg_content, c.position = data.position, c.length = data.length, c.uuid=data.uuid, c.content_offset=data.content_offset, c.stream_id=data.streamId
                 WITH data, c
                 SET c.start_time = CASE WHEN data.start_time IS NOT NULL THEN data.start_time END,
                     c.end_time = CASE WHEN data.end_time IS NOT NULL THEN data.end_time END,
