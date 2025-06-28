@@ -107,7 +107,7 @@ class ContextManagerHandler:
             DEFAULT_CONCURRENT_DOC_PROCESSING_LIMIT
         )
 
-    def setup_neo4j(self, chat_config: Dict):
+    def _connect_neo4j(self, chat_config: Dict):
         try:
             self.neo4j_uri = os.getenv("GRAPH_DB_URI")
             if not self.neo4j_uri:
@@ -137,6 +137,21 @@ class ContextManagerHandler:
         except Exception as e:
             logger.error(f"Error setting up Neo4j: {e}")
             raise e
+
+    def setup_neo4j(self, chat_config: Dict, max_tries=5):
+        tries = 0
+        while tries < max_tries:
+            tries += 1
+            try:
+                self._connect_neo4j(chat_config)
+                return
+            except Exception as e:
+                wait_time = 10
+                logger.error(f"Error setting up Neo4j (attempt {tries}/{max_tries}), waiting {wait_time} seconds...")
+                if tries >= max_tries:
+                    logger.error(f"Failed to connect to Neo4j after {max_tries} attempts. Last error: {e}")
+                    raise e
+                time.sleep(wait_time)
 
     def configure_init(self, config: Dict, req_info: Optional[RequestInfo] = None):
         """Initialize system components based on configuration.
