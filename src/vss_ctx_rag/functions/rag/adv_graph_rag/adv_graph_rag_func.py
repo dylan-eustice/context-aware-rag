@@ -230,6 +230,18 @@ class AdvGraphRAGFunc(Function):
                     }
                     self.chat_history.append(current_interaction)
 
+                    # Append relevant documents to the top of the answer
+                    if len(retrieved_context) > 0:
+                        snippet_len = 200
+                        citation_text = "**Sources:**\n"
+                        for doc in retrieved_context:
+                            sid = doc.metadata.get("stream_id", "unknown-source")
+                            snippet = doc.page_content[:snippet_len]
+                            if len(doc.page_content) > snippet_len:
+                                snippet += "..."
+                            citation_text += f"\n - **{sid}** - *\"{snippet}\"*\n"
+                        citation_text += "\n - - - - - \n"
+                        state["response"] = f"{citation_text}{state['response']}"
                     return state
 
                 # If we need more info, try to retrieve it
