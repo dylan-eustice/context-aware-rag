@@ -39,26 +39,18 @@ VSS_CTX_PORT_IN=<DATA INGESTION PORT>
 
 ### Using docker compose
 
-
-#### Build the Context Aware RAG image
-
-``` bash
-make -C docker build
-```
-
-#### Starting the container/services
-
 ``` bash
 make -C docker start_compose
 ```
 
 This will start the following services:
 
--   ctx-rag-data-ingestion
--   ctx-rag-data-retrieval
+-   vss-ctx-rag-data-ingestion
+-   vss-ctx-rag-data-retrieval
 -   neo4j
     -   UI available at <http://>\<HOST\>:7474
 -   milvus
+    -   UI available at <http://>\<HOST\>:9091
 -   otel-collector
 -   jaeger
     -   UI available at <http://>\<HOST\>:16686
@@ -80,12 +72,12 @@ make -C docker stop_compose
 #### Additional envs
 
 ``` bash
-MILVUS_HOST=<HOST> #milvus host, e.g. localhost
-MILVUS_PORT=<MILVUS_PORT> #milvus port, e.g. 19530
+MILVUS_HOST=<HOST>
+MILVUS_PORT=<MILVUS_PORT>
 
-GRAPH_DB_URI=bolt://<HOST>:<NEO4J_PORT> #neo4j uri, e.g. bolt://localhost:7687
-GRAPH_DB_USERNAME=<USERNAME> #neo4j username, e.g. neo4j
-GRAPH_DB_PASSWORD=<PASSWORD> #neo4j password, e.g. password
+GRAPH_DB_URI=bolt://<HOST>:<NEO4J_PORT>
+GRAPH_DB_USERNAME=<USERNAME>
+GRAPH_DB_PASSWORD=<PASSWORD>
 ```
 
 #### neo4j
@@ -104,7 +96,7 @@ bash standalone_embed.sh start
 ```
 
 
-## Build the Context Aware RAG image
+## Build the vss_ctx_rag image
 
 Make sure you are in the project root directory.
 
