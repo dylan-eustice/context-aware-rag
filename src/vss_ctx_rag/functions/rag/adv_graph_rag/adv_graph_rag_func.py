@@ -16,6 +16,7 @@
 """adv_graph_rag_func.py: File contains AdvGraphRAGFunc class"""
 
 from typing import Optional
+from copy import deepcopy
 import asyncio
 import json
 
@@ -133,6 +134,14 @@ class AdvGraphRAGFunc(Function):
 
             # Initial retrieval
             context = await self.retriever.retrieve_relevant_context(question)
+            retrieved_context = deepcopy(context)
+
+            # If no context is found, assume that we did a temporal retrieval and
+            # nothing turned up
+            if not context:
+                logger.info("No context found, assuming temporal retrieval")
+                state["response"] = "I apologize, but I have no stored records that are either relevant or in the requested time range."
+                return state
 
             # Add relevant chat history to context
             if self.chat_history:

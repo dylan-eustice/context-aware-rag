@@ -393,10 +393,13 @@ class AdvGraphRetrieval:
                 temporal_data = await self.retrieve_temporal_context(
                     start_time, end_time
                 )
-                logger.info(f"Temporal Contexts: {temporal_data}")
+                logger.info(f"Temporal Contexts...")
                 if temporal_data:
                     contexts.extend(temporal_data)
                     logger.info(f"Retrieved {len(temporal_data)} temporal records")
+                else:
+                    logger.info("No temporal data found in that time range")
+                    return None
             else:  # semantic retrieval
                 # Semantic similarity retrieval
                 semantic_data = await self.retrieve_semantic_context(
@@ -405,8 +408,11 @@ class AdvGraphRetrieval:
                     end_time=end_time,
                     sort_by=analysis.get("sort_by", "score"),
                 )
+                logger.info(f"Semantic Contexts...")
                 if semantic_data:
                     contexts.extend(semantic_data)
+
+            logger.info(f"Contexts: {contexts}")
 
             # Relationship-based retrieval
             relationships = analysis.get("relationships", [])
