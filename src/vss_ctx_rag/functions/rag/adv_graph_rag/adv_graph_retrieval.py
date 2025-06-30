@@ -15,7 +15,7 @@
 
 """adv_graph_retrieval.py: File contains AdvGraphRetrieval class"""
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any
 import json
 
@@ -315,7 +315,7 @@ class AdvGraphRetrieval:
             return []
 
     async def analyze_question(self, question: str) -> Dict[str, Any]:
-        """Use LLM to analyze question and determine retrieval strategy"""
+        """Use LLM to analyze question and determine basic retrieval elements"""
         logger.info(f"Analyzing question: {question}")
         prompt = f"""Analyze this question and identify key elements for graph database retrieval.
         Question: {question}
@@ -323,26 +323,17 @@ class AdvGraphRetrieval:
         Identify and return as JSON:
         1. Entity types mentioned. Available entity types: {await self.get_all_entity_types()}
         2. Relationships of interest
-        3. Time references
-            a. start_time: How many seconds in the past to start the time range. If not present, set to None.
-            b. end_time: How many seconds in the past to end the time range. If not present, set to None.
-        4. Sort by: "start_time" or "end_time" or "score"
-        5. Location references
-        6. Stream IDs mentioned. Available stream_ids: {await self.get_all_stream_ids()}
-        7. Retrieval strategy (similarity, temporal)
+        3. Location references
+        4. Stream IDs mentioned. Available stream_ids: {await self.get_all_stream_ids()}
+        5. Retrieval strategy (similarity, temporal)
             a. similarity: If the question needs to find similar content, return the retrieval strategy as similarity
-            b. temporal: If the question is about a specific time range and you can return at least one of the start and end time, then return the strategy as temporal and the start and end time in the time_references field as float or null if not present. Strategy cannot be temporal if both start and end time are not present. The start and end time should be in seconds.
+            b. temporal: If the question is about a specific time range or time-based filtering, return the strategy as temporal
 
         Example question: "Between 30 seconds and 5 minutes ago, has the dog found the ball?"
         Example response:
         {{\
             "entity_types": ["Dog", "Ball"],\
             "relationships": ["DROPPED", "PICKED_UP"],\
-            "time_references": {{\
-                "start": 300.0,\
-                "end": 30.0\
-            }},\
-            "sort_by": "start_time", // "start_time" or "end_time" or "score" \
             "location_references": ["backyard"],\
             "stream_ids": [],\
             "retrieval_strategy": "temporal"\
@@ -353,94 +344,264 @@ class AdvGraphRetrieval:
         {{\
             "entity_types": [],\
             "relationships": [],\
-            "time_references": {{\
-                "start": 300.0,\
-                "end": 0.0\
-            }},\
-            "sort_by": "start_time",\
             "location_references": [],\
             "stream_ids": ["fm-radio-ch3"],\
             "retrieval_strategy": "temporal"\
         }}\
 
-        NOTE: When setting time references (start_time, end_time), we should focus on 3 classes of time windows:
-        1. Window of the last X seconds
-            a. Summarize the last half hour -> start_time, end_time = 1800, 0
-            b. Look for <topic> over the previous 10 mins -> start_time, end_time = 600, 0
-        2. Window between X and Y seconds ago
-            a. Look for <topic> between 10 and 20 seconds ago -> start_time, end_time = 20, 10
-            b. What was being discussed between 5 minutes and half an hour ago -> start_time, end_time = 1800, 300
-        3. Window centered around X seconds ago, with a window of Y seconds (default Y = 300 seconds)
-            a. Look for <topic> from 10 minutes ago -> start_time, end_time = 900, 300
-            b. What was being discussed and hour ago? Use a 15 minute window. -> start_time, end_time = 4500, 2700
+        Example question without time filtering: "What topics were discussed about dogs?"
+        Example response:
+        {{\
+            "entity_types": ["Dog"],\
+            "relationships": [],\
+            "location_references": [],\
+            "stream_ids": [],\
+            "retrieval_strategy": "similarity"\
+        }}\
 
         Output only valid JSON. Do not include any other text.
         """
 
-        # summarize last one hour
-        # summarize events between 60 and 400 seconds
-
         response = await self.chat_llm.ainvoke(prompt)
         logger.info("Question analysis complete")
-        # Parse LLM response to get retrieval strategy
-        # This is a simplified version - you'd want proper JSON parsing
         return remove_think_tags(response.content)
 
+    async def analyze_temporal_strategy(self, question: str) -> Dict[str, Any]:
+        """Analyze question to determine the type of temporal retrieval strategy"""
+        logger.info(f"Analyzing temporal strategy for question: {question}")
+        prompt = f"""Analyze this question to determine the type of temporal retrieval strategy needed.
+        Question: {question}
+
+        Determine which type of temporal filtering is needed and return as JSON:
+        1. "only_recent" - Questions about recent events (e.g., "over the last 5 minutes...")
+        2. "excluding_recent" - Questions excluding recent events (e.g., "excluding the previous hour...")
+        3. "specific_start_stop" - Questions with specific time ranges (e.g., "between 5 and 20 minutes ago...")
+        4. "relative_time_past" - Questions about a specific point in the past (e.g., "what was the topic half an hour ago...")
+        5. "specific_time" - Questions about a specific clock time (e.g., "what was the topic at 10:15 PM?")
+        6. "none" - No temporal filtering needed
+
+        Example question: "Over the last 5 minutes, what topics were discussed?"
+        Example response:
+        {{\
+            "temporal_strategy": "only_recent"\
+        }}\
+
+        Example question: "Between 10 and 20 minutes ago, what happened?"
+        Example response:
+        {{\
+            "temporal_strategy": "specific_start_stop"\
+        }}\
+
+        Example question: "What was being discussed half an hour ago?"
+        Example response:
+        {{\
+            "temporal_strategy": "relative_time_past"\
+        }}\
+
+        Example question: "What was the topic at 2:30 PM?"
+        Example response:
+        {{\
+            "temporal_strategy": "specific_time"\
+        }}\
+
+        Output only valid JSON. Do not include any other text.
+        """
+
+        response = await self.chat_llm.ainvoke(prompt)
+        logger.info("Temporal strategy analysis complete")
+        return remove_think_tags(response.content)
+
+    async def analyze_temporal_times(self, question: str, temporal_strategy: str) -> Dict[str, Any]:
+        """Analyze question to determine specific start and stop times based on temporal strategy"""
+        logger.info(f"Analyzing temporal times for question: {question}, strategy: {temporal_strategy}")
+
+        if temporal_strategy == "none":
+            return {"start_time": None, "end_time": None}
+
+        # Strategy-specific prompt templates
+        strategy_prompts = {
+            "only_recent": {
+                "instruction": "Return how many seconds back to look from now.",
+                "format": '{"seconds_back": 300}  // for "last 5 minutes"',
+                "examples": [
+                    '"last 10 minutes" → {"seconds_back": 600}',
+                    '"over the past hour" → {"seconds_back": 3600}',
+                    '"in the previous 30 seconds" → {"seconds_back": 30}'
+                ]
+            },
+            "excluding_recent": {
+                "instruction": "Return how many seconds to exclude from recent time.",
+                "format": '{"seconds_to_exclude": 3600}  // for "excluding the previous hour"',
+                "examples": [
+                    '"excluding the last 5 minutes" → {"seconds_to_exclude": 300}',
+                    '"not including the past hour" → {"seconds_to_exclude": 3600}',
+                    '"ignoring the previous 2 minutes" → {"seconds_to_exclude": 120}'
+                ]
+            },
+            "specific_start_stop": {
+                "instruction": "Return start and stop times in seconds from now (start_seconds_ago should be larger than end_seconds_ago).",
+                "format": '{"start_seconds_ago": 1200, "end_seconds_ago": 300}  // 20 minutes ago to 5 minutes ago',
+                "examples": [
+                    '"between 5 and 15 minutes ago" → {"start_seconds_ago": 900, "end_seconds_ago": 300}',
+                    '"from 1 hour to 30 minutes ago" → {"start_seconds_ago": 3600, "end_seconds_ago": 1800}',
+                    '"between 2 and 10 minutes ago" → {"start_seconds_ago": 600, "end_seconds_ago": 120}'
+                ]
+            },
+            "relative_time_past": {
+                "instruction": "Return the past point in seconds and optional window size (default 300 seconds if not specified).",
+                "format": '{"past_point_seconds_ago": 1800, "window_seconds": 300}  // 30 minutes ago with 5 minute window',
+                "examples": [
+                    '"half an hour ago" → {"past_point_seconds_ago": 1800, "window_seconds": 300}',
+                    '"what happened 10 minutes ago" → {"past_point_seconds_ago": 600, "window_seconds": 300}',
+                    '"around 2 hours ago, with a 10 minute window" → {"past_point_seconds_ago": 7200, "window_seconds": 600}'
+                ]
+            },
+            "specific_time": {
+                "instruction": "Return the specific time in HH:MM:SS format (24-hour format) and window if specified (default 300 seconds if not specified).",
+                "format": '{"specific_time": "14:30:00", "window_seconds": 300}  // for "2:30 PM"',
+                "examples": [
+                    '"at 3:15 PM" → {"specific_time": "15:15:00"}',
+                    '"around 10:30 AM, plus/minus 10 minutes" → {"specific_time": "10:30:00", "window_seconds": 600}',
+                    '"at 9 o\'clock" → {"specific_time": "09:00:00"}'
+                ]
+            }
+        }
+
+        if temporal_strategy not in strategy_prompts:
+            logger.error(f"Unknown temporal strategy: {temporal_strategy}")
+            return {"start_time": None, "end_time": None}
+
+        strategy_config = strategy_prompts[temporal_strategy]
+
+        prompt = f"""Analyze this question to extract specific time values for the "{temporal_strategy}" temporal strategy.
+        Question: {question}
+        Temporal Strategy: {temporal_strategy}
+
+        Task: {strategy_config["instruction"]}
+
+        Expected JSON format:
+        {strategy_config["format"]}
+
+        Examples:
+        {chr(10).join(f"- {example}" for example in strategy_config["examples"])}
+
+        Output only valid JSON. Do not include any other text.
+        """
+
+        response = await self.chat_llm.ainvoke(prompt)
+        logger.info("Temporal times analysis complete")
+        return remove_think_tags(response.content)
+
+    def _convert_temporal_times_to_timestamps(self, temporal_times: Dict, temporal_strategy: str) -> Dict[str, float]:
+        """Convert temporal analysis results to actual start/end timestamps"""
+        tnow = datetime.now(timezone.utc).timestamp()
+
+        try:
+            if temporal_strategy == "none":
+                return {"start_time": None, "end_time": None}
+
+            elif temporal_strategy == "only_recent":
+                return {
+                    "start_time": tnow - temporal_times["seconds_back"],
+                    "end_time": None
+                }
+
+            elif temporal_strategy == "excluding_recent":
+                return {
+                    "start_time": None,
+                    "end_time": tnow - temporal_times["seconds_to_exclude"]
+                }
+
+            elif temporal_strategy == "specific_start_stop":
+                return {
+                    "start_time": tnow - temporal_times["start_seconds_ago"],
+                    "end_time": tnow - temporal_times["end_seconds_ago"]
+                }
+
+            elif temporal_strategy == "relative_time_past":
+                window_seconds = temporal_times.get("window_seconds", 300)  # Default 5 min window
+                return {
+                    "start_time": tnow - temporal_times["past_point_seconds_ago"] - (window_seconds / 2),
+                    "end_time": tnow - temporal_times["past_point_seconds_ago"] + (window_seconds / 2)
+                }
+
+            elif temporal_strategy == "specific_time":
+                # Parse the specific time and calculate seconds ago from current time
+                specific_time = temporal_times["specific_time"]
+                window_seconds = temporal_times.get("window_seconds", 300)  # Default 5 min window
+
+                # Parse the time string (HH:MM:SS format)
+                time_obj = datetime.strptime(specific_time, "%H:%M:%S").time()
+                now = datetime.now(timezone.utc)
+                target_datetime = datetime.combine(now.date(), time_obj, timezone.utc)
+
+                # If the target time is in the future today, assume it was yesterday
+                if target_datetime > now:
+                    target_datetime -= timedelta(days=1)
+
+                past_point_seconds_ago = (now - target_datetime).total_seconds()
+                logger.info(f"Specific time {specific_time} was {past_point_seconds_ago} seconds ago")
+
+                return {
+                    "start_time": tnow - past_point_seconds_ago - (window_seconds / 2),
+                    "end_time": tnow - past_point_seconds_ago + (window_seconds / 2)
+                }
+
+        except Exception as e:
+            logger.error(f"Error converting temporal times to timestamps: {e}")
+            return {"start_time": None, "end_time": None}
+
+        # Fallback
+        return {"start_time": None, "end_time": None}
+
     async def retrieve_relevant_context(self, question: str) -> List[Document]:
-        """Main retrieval method that orchestrates different retrieval strategies"""
+        """Main retrieval method that orchestrates different retrieval strategies using 3-step analysis"""
         with TimeMeasure("AdvGraphRetrieval/retrieve_context", "blue"):
             logger.info(f"Starting context retrieval for question: {question}")
-            analysis_response = await self.analyze_question(question)
-            json_start = analysis_response.find("{")
-            json_end = analysis_response.rfind("}") + 1
 
-            # Parse the JSON response from the LLM with retries
-            logger.info(f"Analysis response: {analysis_response}")
-            retry_count = 0
-            while retry_count < self.max_retries:
-                try:
-                    analysis = json.loads(analysis_response[json_start:json_end])
-                    break
-                except json.JSONDecodeError as e:
-                    logger.error(f"Failed to parse JSON response: {e}")
-                    retry_count += 1
-                    if retry_count < self.max_retries:
-                        # Retry getting analysis
-                        analysis_response = await self.analyze_question(question)
-                        json_start = analysis_response.find("{")
-                        json_end = analysis_response.rfind("}") + 1
-                        logger.info(
-                            f"Retry {retry_count}: New analysis response: {analysis_response}"
-                        )
-                    else:
-                        logger.error("Max retries reached, using default analysis")
-                        analysis = {
-                            "entity_types": [],
-                            "relationships": [],
-                            "time_references": {},
-                            "location_references": [],
-                            "stream_ids": [],
-                            "sort_by": "score",
-                            "retrieval_strategy": "similarity",
-                        }
+            # Step 1: Basic question analysis
+            analysis = await self._parse_json_with_retries(self.analyze_question, "basic analysis", question)
 
-            # Collect context from multiple retrieval strategies
-            contexts = []
+            if not analysis:
+                logger.error("Failed to parse basic analysis, using defaults")
+                analysis = {
+                    "entity_types": [],
+                    "relationships": [],
+                    "location_references": [],
+                    "stream_ids": [],
+                    "retrieval_strategy": "similarity",
+                }
 
-            # Get retrieval strategy and parameters from analysis
+            # Get basic parameters from analysis
             strategy = analysis.get("retrieval_strategy", "")
+            stream_ids = analysis.get("stream_ids", [])
             logger.info(f"Using retrieval strategy: {strategy}")
 
-            time_refs = analysis.get("time_references", {})
+            # Step 2 & 3: Temporal analysis
             start_time = None
             end_time = None
-            stream_ids = analysis.get("stream_ids", [])
+            temporal_strategy = "none"
 
-            # Temporal context retrieval
-            if time_refs:
-                tnow = datetime.now(timezone.utc).timestamp()
-                start_time = tnow - time_refs.get("start") if time_refs.get("start") is not None else None
-                end_time = tnow - time_refs.get("end") if time_refs.get("end") is not None else None
+            # Step 2: Determine temporal strategy type
+            temporal_strategy_analysis = await self._parse_json_with_retries(self.analyze_temporal_strategy, "temporal strategy", question)
+
+            if temporal_strategy_analysis:
+                temporal_strategy = temporal_strategy_analysis.get("temporal_strategy", "none")
+                logger.info(f"Using temporal strategy: {temporal_strategy}")
+
+                # Step 3: Determine specific times if not "none"
+                if temporal_strategy != "none":
+                    temporal_times = await self._parse_json_with_retries(self.analyze_temporal_times, "temporal times", question, temporal_strategy)
+
+                    if temporal_times:
+                        # Convert to actual timestamps
+                        timestamps = self._convert_temporal_times_to_timestamps(temporal_times, temporal_strategy)
+                        start_time = timestamps.get("start_time")
+                        end_time = timestamps.get("end_time")
+                        logger.info(f"Temporal range: {start_time} to {end_time}")
+
+            # Collect context from retrieval strategies
+            contexts = []
 
             if strategy == "temporal":
                 temporal_data = await self.retrieve_temporal_context(
@@ -508,3 +669,42 @@ class AdvGraphRetrieval:
 
             logger.info(f"Returning {len(documents)} documents")
             return documents
+
+    async def _parse_json_with_retries(self, analysis_func, analysis_type: str, *args, **kwargs) -> Dict:
+        """Helper method to retry analysis function calls and parse JSON responses"""
+        retry_count = 0
+
+        while retry_count < self.max_retries:
+            try:
+                # Call the analysis function
+                response = await analysis_func(*args, **kwargs)
+
+                # Parse JSON from response
+                json_start = response.find("{")
+                json_end = response.rfind("}") + 1
+
+                logger.info(f"{analysis_type} response (attempt {retry_count + 1}): {response}")
+
+                if json_start >= 0 and json_end > json_start:
+                    result = json.loads(response[json_start:json_end])
+                    logger.info(f"Successfully parsed {analysis_type} JSON on attempt {retry_count + 1}")
+                    return result
+                else:
+                    raise json.JSONDecodeError(f"No JSON found in {analysis_type} response", response, 0)
+
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse {analysis_type} JSON response (attempt {retry_count + 1}): {e}")
+                retry_count += 1
+                if retry_count < self.max_retries:
+                    logger.info(f"Retrying {analysis_type} analysis (attempt {retry_count + 1}/{self.max_retries})")
+                else:
+                    logger.error(f"Max retries ({self.max_retries}) reached for {analysis_type}")
+                    return None
+            except Exception as e:
+                logger.error(f"Unexpected error in {analysis_type} analysis (attempt {retry_count + 1}): {e}")
+                retry_count += 1
+                if retry_count >= self.max_retries:
+                    logger.error(f"Max retries ({self.max_retries}) reached for {analysis_type}")
+                    return None
+
+        return None
