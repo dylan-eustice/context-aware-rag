@@ -457,12 +457,14 @@ class AdvGraphRetrieval:
                 ]
             },
             "specific_time": {
-                "instruction": "Return the specific time in HH:MM:SS format (24-hour format) and window if specified (default 300 seconds if not specified).",
-                "format": '{"specific_time": "14:30:00", "window_seconds": 300}  // for "2:30 PM"',
+                "instruction": "Return the specific time. If AM/PM was specified, convert to HH:MM:SS format (24-hour format). If AM/PM was NOT specified, preserve the original time format and indicate AM/PM was not specified. Also include window if specified (default 300 seconds if not specified).",
+                "format": '{"specific_time": "14:30:00", "am_pm_specified": true, "window_seconds": 300}  // for "2:30 PM"',
                 "examples": [
-                    '"at 3:15 PM" → {"specific_time": "15:15:00"}',
-                    '"around 10:30 AM, plus/minus 10 minutes" → {"specific_time": "10:30:00", "window_seconds": 600}',
-                    '"at 9 o\'clock" → {"specific_time": "09:00:00"}'
+                    '"at 3:15 PM" → {"specific_time": "15:15:00", "am_pm_specified": true}',
+                    '"around 10:30 AM, plus/minus 10 minutes" → {"specific_time": "10:30:00", "am_pm_specified": true, "window_seconds": 600}',
+                    '"at 9 o\'clock" → {"specific_time": "09:00:00", "am_pm_specified": false}',
+                    '"at 2:45" → {"specific_time": "02:45:00", "am_pm_specified": false}',
+                    '"around 11:30" → {"specific_time": "11:30:00", "am_pm_specified": false}'
                 ]
             }
         }
@@ -529,15 +531,43 @@ class AdvGraphRetrieval:
                 # Parse the specific time and calculate seconds ago from current time
                 specific_time = temporal_times["specific_time"]
                 window_seconds = temporal_times.get("window_seconds", 300)  # Default 5 min window
+                am_pm_specified = temporal_times.get("am_pm_specified", False)
 
                 # Parse the time string (HH:MM:SS format)
                 time_obj = datetime.strptime(specific_time, "%H:%M:%S").time()
                 now = datetime.now(timezone.utc)
-                target_datetime = datetime.combine(now.date(), time_obj, timezone.utc)
 
-                # If the target time is in the future today, assume it was yesterday
-                if target_datetime > now:
-                    target_datetime -= timedelta(days=1)
+                if am_pm_specified:
+                    # AM/PM was specified, so the time is already correct in 24-hour format
+                    # Just need to determine if it's today or yesterday
+                    target_datetime = datetime.combine(now.date(), time_obj, timezone.utc)
+
+                    # If the target time is in the future today, use yesterday
+                    if target_datetime > now:
+                        target_datetime = datetime.combine(now.date() - timedelta(days=1), time_obj, timezone.utc)
+                        logger.info(f"Specific time {specific_time} (AM/PM specified) was in the future today, using yesterday")
+                else:
+                    # AM/PM was NOT specified, use AM if PM is in the future (today) and PM otherwise
+                    # Create PM version using timedelta
+                    pm_time_today = datetime.combine(now.date(), time_obj, timezone.utc)
+                    if time_obj.hour < 12:
+                        pm_time_today += timedelta(hours=12)
+
+                    if pm_time_today > now:
+                        # PM is in the future today, so use AM
+                        am_time_today = datetime.combine(now.date(), time_obj, timezone.utc)
+                        if am_time_today > now:
+                            # AM is also in future today, use PM yesterday
+                            target_datetime = pm_time_today - timedelta(days=1)
+                            logger.info(f"Specific time {specific_time} (no AM/PM): PM in future, using PM yesterday")
+                        else:
+                            # AM is in past today, use it
+                            target_datetime = am_time_today
+                            logger.info(f"Specific time {specific_time} (no AM/PM): PM in future, using AM today")
+                    else:
+                        # PM is in past today, so use PM
+                        target_datetime = pm_time_today
+                        logger.info(f"Specific time {specific_time} (no AM/PM): PM in past, using PM today")
 
                 past_point_seconds_ago = (now - target_datetime).total_seconds()
                 logger.info(f"Specific time {specific_time} was {past_point_seconds_ago} seconds ago")
