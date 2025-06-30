@@ -24,7 +24,7 @@ summarization:
     top_p: 0.7
   embedding:
     model: "nvidia/llama-3.2-nv-embedqa-1b-v2"
-    base_url: https://integrate.api.nvidia.com/v1
+    base_url: "http://embedding-nim:8000/v1/"
   params:
     batch_size: 5
     batch_max_concurrency: 20
@@ -54,7 +54,7 @@ chat:
     temperature: 0.5
   embedding:
     model: "nvidia/llama-3.2-nv-embedqa-1b-v2"
-    base_url: https://integrate.api.nvidia.com/v1
+    base_url: "http://embedding-nim:8000/v1/"
   reranker:
     model: "nvidia/llama-3.2-nv-rerankqa-1b-v2"
     base_url: https://ai.api.nvidia.com/v1/retrieval/nvidia/llama-3_2-nv-rerankqa-1b-v2/reranking
