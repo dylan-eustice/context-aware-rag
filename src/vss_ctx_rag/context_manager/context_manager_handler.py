@@ -26,6 +26,7 @@ import time
 import json
 from typing import Dict, Optional
 import os
+import requests
 
 from vss_ctx_rag.base import Function
 from vss_ctx_rag.utils.ctx_rag_logger import TimeMeasure, logger
@@ -102,10 +103,44 @@ class ContextManagerHandler:
         self.neo4j_username = None
         self.neo4j_password = None
         self.neo4jDB: Neo4jGraphDB = None
+        self.frontend_endpoint = os.environ.get('CHAT_FRONTEND_ENDPOINT', None)
         self.configure_init(config, req_info)
         self._doc_processing_semaphore = asyncio.Semaphore(
             DEFAULT_CONCURRENT_DOC_PROCESSING_LIMIT
         )
+
+    def _frontend_export(self, transcript, stream_id, timestamp, uuid):
+        """Export transcript to frontend interface.
+
+        Args:
+            transcript: The transcript text to export
+            stream_id: Stream identifier
+            timestamp: UTC timestamp in %Y-%m-%d %H:%M:%S format
+            uuid: UUID for tracking
+        """
+        if not self.frontend_endpoint:
+            logger.debug("No CHAT_FRONTEND_ENDPOINT configured, skipping frontend export")
+            return
+
+        endpoint = f"{self.frontend_endpoint}/api/update-text"
+        data = {
+            "text": transcript,
+            "stream_id": stream_id,
+            "timestamp": timestamp,
+            "finalized": True,
+            "uuid": uuid
+        }
+
+        try:
+            response = requests.post(endpoint, json=data, timeout=10)
+            if response.status_code == 200:
+                logger.debug(f"Successfully exported to frontend: UUID {uuid}")
+            else:
+                logger.warning(f"Failed to export to frontend: {response.status_code}")
+        except requests.exceptions.ConnectionError:
+            logger.error(f"Failed to connect to frontend at {self.frontend_endpoint}")
+        except Exception as e:
+            logger.error(f"Error exporting to frontend: {e}")
 
     def _connect_neo4j(self, chat_config: Dict):
         try:
@@ -491,6 +526,15 @@ class ContextManagerHandler:
             self.curr_doc_index += 1
         elif doc_i is None:
             raise ValueError("Param doc_i missing.")
+
+        # Export to frontend as pending ingestion
+        if doc_meta and self.frontend_endpoint:
+            self._frontend_export(
+                transcript=doc,
+                stream_id=doc_meta.get('streamId'),
+                timestamp=doc_meta.get('timestamp'),
+                uuid=doc_meta.get('uuid')
+            )
 
         # Process document through all functions with semaphore control
         async with self._doc_processing_semaphore:
