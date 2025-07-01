@@ -73,6 +73,7 @@ services:
       - VIA_CTX_RAG_EXPORTER=otlp
       - VIA_CTX_RAG_OTEL_ENDPOINT=http://otel_collector:4318
       - VIA_CTX_RAG_ENABLE_DEV=${VIA_CTX_RAG_ENABLE_DEV:-false}
+      - CHAT_FRONTEND_ENDPOINT=http://agentiq-ui:3000
 
 
 networks:

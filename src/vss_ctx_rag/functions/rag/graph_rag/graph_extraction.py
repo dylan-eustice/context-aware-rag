@@ -19,6 +19,7 @@ import hashlib
 import time
 from typing import List
 
+import aiohttp
 from langchain_community.graphs.graph_document import GraphDocument
 
 from langchain_text_splitters import TokenTextSplitter
@@ -561,6 +562,34 @@ class GraphExtraction:
                 self.graph_db.graph_db.add_graph_documents(
                     cleaned_graph_documents, baseEntityLabel=True
                 )
+
+            # Update transcript status to processed after successful graph creation
+            await self._update_transcript_status(docs)
+
+    async def _update_transcript_status(self, docs):
+        """Update transcript status to processed via frontend API."""
+        frontend_uri = os.environ.get('CHAT_FRONTEND_ENDPOINT', None)
+        if not frontend_uri:
+            logger.info("No CHAT_FRONTEND_ENDPOINT configured, skipping transcript status update")
+            return
+
+        endpoint = f"{frontend_uri}/api/update-text"
+        for doc in docs:
+            doc_uuid = doc.metadata.get('uuid')
+            if doc_uuid:
+                try:
+                    # Mark as processed
+                    data = {"uuid": doc_uuid, "pending": False}
+                    async with aiohttp.ClientSession() as session:
+                        async with session.patch(endpoint, json=data) as response:
+                            if response.status == 200:
+                                logger.info(f"Successfully updated transcript status for UUID: {doc_uuid}")
+                            else:
+                                logger.warning(f"Failed to update transcript status for UUID: {doc_uuid}, status: {response.status}")
+                except Exception as e:
+                    logger.error(f"Error updating transcript status for UUID {doc_uuid}: {e}")
+            else:
+                logger.debug("Document has no UUID, skipping status update")
 
     def reset(self):
         """Reset the graph extraction state.
